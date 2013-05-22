@@ -5,6 +5,8 @@
 <p>Myawr relies on the <a href="http://www.percona.com/software/percona-toolkit/">Percona Toolkit</a> to do the slow query log collection. Specifically you can run <a href="http://www.percona.com/doc/percona-toolkit/2.0/pt-query-digest.html">pt-query-digest</a>. To parse your slow logs and insert them into your server database for reporting and analyzing.</p>
 <p>Thanks to orzdba.pl (<a href="mailto:zhuxu@taobao.com">zhuxu@taobao.com</a>).</p>
 <p>&nbsp;</p>
+<p>If you like to read pdf,pls click <a href="http://www.noodba.com/myawr.pdf">myawr_reference_guid</a></p>
+<p>&nbsp;</p>
 <h2> <strong>2.Myawr Data Model</strong></h2>
 <p>myawr db include tables list:<br />
 mysql&gt; show tables;<br />
@@ -49,13 +51,17 @@ Connect to the MySQL database where store the performance data and issue the fol
 <p>CREATE DATABASE `myawr` DEFAULT CHARACTER SET utf8;<br />
 grant all on myawr.* to &#8216;user&#8217;@'%&#8217; identified by &#8220;111111&#8243;;</p>
 <p>then create tables in db myawr.</p>
+<br/>
 <p><strong>3.2 initialize myawr_host</strong></p>
 <p>Insert a config record about your mysql instacne,just like:<br />
 INSERT INTO `myawr_host`(id,host_name,ip_addr,port,db_role,version) VALUES (6, &#8216;db2.11&#8242;, &#8217;192.168.2.11&#8242;, 3306, &#8216;master&#8217;, &#8217;5.5.27&#8242;);<br />
 <strong>3.3 add two jobs in crontab</strong></p>
-<p>* * * * * perl /data/mysql/sh/myawr.pl -u user -p 111111 -lh 192.168.2.11 -P 3306 -tu user -tp 111111 -TP 3306 -th 192.168.1.92 -n eth0 -d sdb1 -I 6 &gt;&gt; /data/mysql/sh/myawr_pl.log 2&gt;&amp;1<br />
-#<br />
-15 14 * * * /data/mysql/sh/pt-query-digest &#8211;user=user &#8211;password=111111 &#8211;review h=192.168.1.92,D=myawr,t=myawr_query_review &#8211;review-history h=192.168.1.92,D=myawr,t=myawr_query_review_history &#8211;no-report &#8211;limit=100\% &#8211;filter=&#8221;\$event-&gt;{add_column} = length(\$event-&gt;{arg}) and \$event-&gt;{hostid}=6&#8243; /data/mysql/sh/slow_`date -d &#8220;-1 day&#8221; +&#8221;\%Y\%m\%d&#8221;`.log &gt;&gt; /data/mysql/sh/pt-query_run.log 2&gt;&amp;1</p>
+<p>
+* * * * * perl /data/mysql/sh/myawr.pl -u user -p 111111 -lh 192.168.2.11 -P 3306  -tu user -tp 111111 -TP 3306 -th 192.168.1.92 -n eth0 -d sdb1 -I 6 >> /data/mysql/sh/myawr_pl.log 2>&1
+<br/>
+15 14 * * * /data/mysql/sh/pt-query-digest --user=user --password=111111 --review h=192.168.1.92,D=myawr,t=myawr_query_review --review-history h=192.168.1.92,D=myawr,t=myawr_query_review_history --no-report --limit=100\% --filter="\$event->{add_column} = length(\$event->{arg}) and \$event->{hostid}=6"  /data/mysql/sh/slow_`date -d "-1 day" +"\%Y\%m\%d"`.log >> /data/mysql/sh/pt-query_run.log 2>&1
+<p>
+
 <p>myawr.pl Parameters:<br />
 -h,&#8211;help Print Help Info.<br />
 -i,&#8211;interval Time(second) Interval(default 1).<br />
