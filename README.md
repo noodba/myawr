@@ -1,5 +1,6 @@
 <h2>1.What is myawr</h2>
 Myawr is a tool for collecting and analyzing performance data for MySQL database (including os info ,mysql status info and Slow Query Log  all of details). The idea comes from Oracle awr. Myawr periodic collect data and save to the database as snapshots. Myawr was designed as CS architecture.Myawr depends on performance schema of MySQL database. Myawr consists of two parts:
+
 <b>myawr.pl</b><b>--------a perl script for collecting mysql performance data</b>
 <b>myawrrpt.pl-----a perl script for analyzing mysql performance data</b>
 
