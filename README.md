@@ -176,5 +176,6 @@ Let me show some pictures which come from my test db report:<br />
 <p>Any questions,pls contact me freely. </p>
 <p>EMAIL: qiuwsh@gmail.com<br />
 Q Q : 570182914<br />
-Phone: (+86)13817963180</p>
+Phone: (+86)13817963180<br/>
+Blog:  www.noodba.com</p>
 <p>&nbsp;</p>
