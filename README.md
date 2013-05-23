@@ -44,7 +44,7 @@ myawr_innodb_info.(host_id,snap_id) reference myawr_snapshot.(host_id,snap_id);<
 <p>If you are interesting to use this tool, here&#8217;s what you need:</p>
 <p>1. A MySQL database to store snapshot data and slow log analysis data .<br />
 2. pt-query-digest by percona<br />
-3. A MySQL server with perl-DBD-mysql<br />
+3. A MySQL server(version 5.5) with perl-DBD-mysql<br />
 4. slow query logs named like slow_20130521.log,you can switch slow logs every day.</p>
 <p><strong>3.1 install db</strong><br />
 Connect to the MySQL database where store the performance data and issue the following command in myawr.sql:</p>
