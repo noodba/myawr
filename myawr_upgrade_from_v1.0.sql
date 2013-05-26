@@ -570,4 +570,3 @@ insert into myawr_snapshot_events_waits_summary_global_by_event_name select * fr
 insert into myawr_snapshot_file_summary_by_event_name                select * from myawr_snapshot_file_summary_by_event_name_old                 ;
 insert into myawr_swap_net_disk_info                                 select * from myawr_swap_net_disk_info_old                                  ;
 
-     
