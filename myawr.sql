@@ -2,276 +2,245 @@ CREATE DATABASE `myawr`  DEFAULT CHARACTER SET utf8;
 
 grant all on myawr.* to 'user'@'localhost' identified by "111111";
 
-CREATE TABLE `myawr_host` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `host_name` varchar(50) NOT NULL,
-  `ip_addr`  varchar(50) NOT NULL,
-  `port` int(11) NOT NULL DEFAULT '3306',
-  `db_role`  varchar(50) NOT NULL,
-  `version` varchar(50) NOT NULL,
-  `uptime`  varchar(50) NOT NULL,
-  `check_time`  datetime,  
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `myawr_snapshot` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `host_id` int(11) NOT NULL,
-  `snap_time` datetime NOT NULL,
-  `snap_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_myawr_snapshot_host_id` (`host_id`,`snap_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=194 DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `myawr_snapshot_events_waits_summary_by_instance` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `snap_id` int(11) NOT NULL,
-  `host_id` int(11) NOT NULL,
-  `EVENT_NAME` varchar(128) NOT NULL,
-  `OBJECT_INSTANCE_BEGIN` bigint(20) NOT NULL,
-  `COUNT_STAR` bigint(20) unsigned NOT NULL,
-  `SUM_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  `MIN_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  `AVG_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  `MAX_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_waits_summary_by_instance_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_waits_summary_by_instance_host_id` (`host_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `myawr_snapshot_events_waits_summary_global_by_event_name` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `snap_id` int(11) NOT NULL,
-   `host_id` int(11) NOT NULL,
-  `EVENT_NAME` varchar(128) NOT NULL,
-  `COUNT_STAR` bigint(20) unsigned NOT NULL,
-  `SUM_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  `MIN_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  `AVG_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  `MAX_TIMER_WAIT` bigint(20) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_waits_summary_global_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_waits_summary_global_host_id` (`host_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `myawr_snapshot_file_summary_by_event_name` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `snap_id` int(11) NOT NULL,
-  `host_id` int(11) NOT NULL,
-  `EVENT_NAME` varchar(128) NOT NULL,
-  `COUNT_READ` bigint(20) unsigned NOT NULL,
-  `COUNT_WRITE` bigint(20) unsigned NOT NULL,
-  `SUM_NUMBER_OF_BYTES_READ` bigint(20) unsigned NOT NULL,
-  `SUM_NUMBER_OF_BYTES_WRITE` bigint(20) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_file_summary_by_event_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_file_summary_by_event_host_id` (`host_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `myawr_snapshot_file_summary_by_instance` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `snap_id` int(11) NOT NULL,
-  `host_id` int(11) NOT NULL,
-  `FILE_NAME` varchar(512) NOT NULL,
-  `EVENT_NAME` varchar(128) NOT NULL,
-  `COUNT_READ` bigint(20) unsigned NOT NULL,
-  `COUNT_WRITE` bigint(20) unsigned NOT NULL,
-  `SUM_NUMBER_OF_BYTES_READ` bigint(20) unsigned NOT NULL,
-  `SUM_NUMBER_OF_BYTES_WRITE` bigint(20) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_file_summary_by_instance_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_file_summary_by_instance_host_id` (`host_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-
-
-CREATE TABLE `myawr_load_info` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `snap_id` int(11) NOT NULL,
-  `host_id` int(11) NOT NULL,
-  `load1`  float(10,2) ,
-  `load5`  float(10,2) ,
-  `load15`  float(10,2) ,
-  PRIMARY KEY (`id`),
-  KEY `idx_myawr_load_info_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_myawr_load_info_host_id` (`host_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 CREATE TABLE `myawr_cpu_info` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `snap_id` int(11) NOT NULL,
   `host_id` int(11) NOT NULL,
-  `cpu_user`   float(10,2) ,
-  `cpu_system`  float(10,2) ,
-  `cpu_idle`  float(10,2) ,
-  `cpu_iowait`  float(10,2) ,
+  `cpu_user` float(10,2) DEFAULT NULL,
+  `cpu_system` float(10,2) DEFAULT NULL,
+  `cpu_idle` float(10,2) DEFAULT NULL,
+  `cpu_iowait` float(10,2) DEFAULT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
   KEY `idx_myawr_cpu_info_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_myawr_cpu_info_host_id` (`host_id`),
+  KEY `idx_myawr_cpu_info_snap_time` (`snap_time`),
+  KEY `idx_myawr_cpu_info_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75295 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
+
+
+CREATE TABLE `myawr_host` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `host_name` varchar(50) NOT NULL,
+  `ip_addr` varchar(50) NOT NULL,
+  `port` int(11) NOT NULL DEFAULT '3306',
+  `db_role` varchar(50) NOT NULL,
+  `version` varchar(50) NOT NULL,
+  `uptime` varchar(50) NOT NULL,
+  `check_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `myawr_swap_net_disk_info` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `snap_id` int(11) NOT NULL,
-  `host_id` int(11) NOT NULL,
-  `swap_in` float(10,2) DEFAULT NULL,
-  `swap_out` float(10,2) DEFAULT NULL,
-  `net_recv` float(10,2) DEFAULT NULL,
-  `net_send` float(10,2) DEFAULT NULL,
-  `file_system` varchar(50) DEFAULT NULL,
-  `total_mb` float(10,2) DEFAULT NULL,
-  `used_mb` float(10,2) DEFAULT NULL,
-  `used_pct` float(10,2) DEFAULT NULL,
-  `mount_point` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_myawr_swap_net_info_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_myawr_swap_net_info_host_id` (`host_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `myawr_io_info` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `snap_id` int(11) NOT NULL,
-  `host_id` int(11) NOT NULL,
-  `rd_ios_s`  float(10,2) ,
-  `wr_ios_s`  float(10,2) ,
-  `rkbs`  float(10,2) ,
-  `wkbs`  float(10,2) ,
-  `queue`  float(10,2) ,
-  `wait`  float(10,2) ,
-  `svc_t`  float(10,2) ,
-  `busy`  float(10,2) ,
-  KEY `idx_myawr_io_info_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_myawr_io_info_host_id` (`host_id`),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE myawr_mysql_info (
-  id bigint(20) NOT NULL AUTO_INCREMENT,
-  snap_id int(11) NOT NULL,
-  host_id int(11) NOT NULL,
-  query_cache_size   float(26,2) ,
-  thread_cache_size   float(26,2) ,
-  table_definition_cache   float(26,2) ,
-  max_connections   float(26,2) ,
-  table_open_cache   float(26,2) ,
-  slow_launch_time   float(26,2) ,
-  log_slow_queries   float(26,2) ,
-  max_heap_table_size   float(26,2) ,
-  tmp_table_size   float(26,2) , 
-  open_files_limit   float(26,2) ,
-  Max_used_connections   float(26,2) ,
-  Threads_connected   float(26,2) ,
-  Threads_cached   float(26,2) ,   
-  Threads_created   float(26,2) ,  
-  Threads_running   float(26,2) ,
-  Connections   float(26,2) ,
-  Questions   float(26,2) ,
-  Com_select float(26,2) ,
-  Com_insert float(26,2) ,
-  Com_update float(26,2) ,
-  Com_delete  float(26,2) ,
-  Bytes_received   float(26,2) ,
-  Bytes_sent   float(26,2) ,
-  Qcache_hits   float(26,2) ,            
-  Qcache_inserts   float(26,2) ,
-  Select_full_join   float(26,2) ,
-  Select_scan   float(26,2) ,
-  Slow_queries   float(26,2) ,
-  Com_commit   float(26,2) ,
-  Com_rollback   float(26,2) ,
-  Open_files   float(26,2) ,              
-  Open_table_definitions   float(26,2) ,  
-  Open_tables   float(26,2) ,             
-  Opened_files   float(26,2) ,            
-  Opened_table_definitions   float(26,2) ,
-  Opened_tables   float(26,2) ,
-  Created_tmp_disk_tables   float(26,2) ,
-  Created_tmp_files   float(26,2) ,      
-  Created_tmp_tables   float(26,2) ,
-  Binlog_cache_disk_use   float(26,2) ,
-  Binlog_cache_use   float(26,2) ,
-  Aborted_clients    float(26,2) ,
-  Sort_merge_passes       float(26,2) ,
-  Sort_range              float(26,2) ,
-  Sort_rows               float(26,2) ,
-  Sort_scan               float(26,2) ,
-  Table_locks_immediate   float(26,2) , 
-  Table_locks_waited      float(26,2) ,
-  Handler_read_first      float(26,2) ,
-  Handler_read_key        float(26,2) ,
-  Handler_read_last       float(26,2) ,
-  Handler_read_next       float(26,2) ,
-  Handler_read_prev       float(26,2) ,
-  Handler_read_rnd        float(26,2) ,
-  Handler_read_rnd_next   float(26,2) ,
-  KEY idx_myawr_mysql_info_snap_host_id (snap_id,host_id),
-  KEY idx_myawr_mysql_info_host_id (host_id),
-  PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 
 
 CREATE TABLE `myawr_innodb_info` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `snap_id` int(11) NOT NULL,
   `host_id` int(11) NOT NULL,
-  `Innodb_rows_inserted`  float(26,2) ,
-  `Innodb_rows_updated`  float(26,2) ,
-  `Innodb_rows_deleted`  float(26,2) ,
-  `Innodb_rows_read`  float(26,2) ,
-  `Innodb_buffer_pool_read_requests`  float(26,2) ,
-  `Innodb_buffer_pool_reads`  float(26,2) ,
-  `Innodb_buffer_pool_pages_data`  float(26,2) ,
-  `Innodb_buffer_pool_pages_free`  float(26,2) ,
-  `Innodb_buffer_pool_pages_dirty`  float(26,2) ,
-  `Innodb_buffer_pool_pages_flushed`  float(26,2) ,
-  `Innodb_data_reads`  float(26,2) ,
-  `Innodb_data_writes`  float(26,2) ,
-  `Innodb_data_read`  float(26,2) ,
-  `Innodb_data_written`  float(26,2) ,
-  `Innodb_os_log_fsyncs`  float(26,2) ,
-  `Innodb_os_log_written`  float(26,2) ,
-  `history_list`  float(26,2) ,
-  `log_bytes_written`  float(26,2) ,
-  `log_bytes_flushed`  float(26,2) ,
-  `last_checkpoint`  float(26,2) ,
-  `queries_inside`  float(26,2) ,
-  `queries_queued`  float(26,2) ,
-  `read_views`  float(26,2) ,
-   innodb_open_files   float(26,2) ,
-   innodb_log_waits   float(26,2) ,
-  KEY `idx_myawr_mysql_info_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_myawr_mysql_info_host_id` (`host_id`),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `Innodb_rows_inserted` float(26,2) DEFAULT NULL,
+  `Innodb_rows_updated` float(26,2) DEFAULT NULL,
+  `Innodb_rows_deleted` float(26,2) DEFAULT NULL,
+  `Innodb_rows_read` float(26,2) DEFAULT NULL,
+  `Innodb_buffer_pool_read_requests` float(26,2) DEFAULT NULL,
+  `Innodb_buffer_pool_reads` float(26,2) DEFAULT NULL,
+  `Innodb_buffer_pool_pages_data` float(26,2) DEFAULT NULL,
+  `Innodb_buffer_pool_pages_free` float(26,2) DEFAULT NULL,
+  `Innodb_buffer_pool_pages_dirty` float(26,2) DEFAULT NULL,
+  `Innodb_buffer_pool_pages_flushed` float(26,2) DEFAULT NULL,
+  `Innodb_data_reads` float(26,2) DEFAULT NULL,
+  `Innodb_data_writes` float(26,2) DEFAULT NULL,
+  `Innodb_data_read` float(26,2) DEFAULT NULL,
+  `Innodb_data_written` float(26,2) DEFAULT NULL,
+  `Innodb_os_log_fsyncs` float(26,2) DEFAULT NULL,
+  `Innodb_os_log_written` float(26,2) DEFAULT NULL,
+  `history_list` float(26,2) DEFAULT NULL,
+  `log_bytes_written` float(26,2) DEFAULT NULL,
+  `log_bytes_flushed` float(26,2) DEFAULT NULL,
+  `last_checkpoint` float(26,2) DEFAULT NULL,
+  `queries_inside` float(26,2) DEFAULT NULL,
+  `queries_queued` float(26,2) DEFAULT NULL,
+  `read_views` float(26,2) DEFAULT NULL,
+  `innodb_open_files` float(26,2) DEFAULT NULL,
+  `innodb_log_waits` float(26,2) DEFAULT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_myawr_innodb_info_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_myawr_innodb_info_snap_time` (`snap_time`),
+  KEY `idx_myawr_innodb_info_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75079 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
 
+
+CREATE TABLE `myawr_io_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `snap_id` int(11) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `rd_ios_s` float(10,2) DEFAULT NULL,
+  `wr_ios_s` float(10,2) DEFAULT NULL,
+  `rkbs` float(10,2) DEFAULT NULL,
+  `wkbs` float(10,2) DEFAULT NULL,
+  `queue` float(10,2) DEFAULT NULL,
+  `wait` float(10,2) DEFAULT NULL,
+  `svc_t` float(10,2) DEFAULT NULL,
+  `busy` float(10,2) DEFAULT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_myawr_io_info_snap_time` (`snap_time`),
+  KEY `idx_myawr_io_info_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_myawr_io_info_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75299 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
 
 CREATE TABLE `myawr_isam_info` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `snap_id` int(11) NOT NULL,
   `host_id` int(11) NOT NULL,
-  key_buffer_size   float(26,2),
-  join_buffer_size   float(26,2),
-	sort_buffer_size   float(26,2),
-	Key_blocks_not_flushed   float(26,2),
-	Key_blocks_unused   float(26,2),     
-	Key_blocks_used   float(26,2),       
-	Key_read_requests   float(26,2),     
-	Key_reads   float(26,2),             
-	Key_write_requests   float(26,2),    
-	Key_writes   float(26,2), 
-  KEY `idx_myawr_mysql_info_snap_host_id` (`snap_id`,`host_id`),
-  KEY `idx_myawr_mysql_info_host_id` (`host_id`),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `key_buffer_size` float(26,2) DEFAULT NULL,
+  `join_buffer_size` float(26,2) DEFAULT NULL,
+  `sort_buffer_size` float(26,2) DEFAULT NULL,
+  `Key_blocks_not_flushed` float(26,2) DEFAULT NULL,
+  `Key_blocks_unused` float(26,2) DEFAULT NULL,
+  `Key_blocks_used` float(26,2) DEFAULT NULL,
+  `Key_read_requests` float(26,2) DEFAULT NULL,
+  `Key_reads` float(26,2) DEFAULT NULL,
+  `Key_write_requests` float(26,2) DEFAULT NULL,
+  `Key_writes` float(26,2) DEFAULT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_myawr_isam_info_snap_time` (`snap_time`),
+  KEY `idx_myawr_isam_info_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_myawr_isam_info_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75079 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
 
+CREATE TABLE `myawr_load_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `snap_id` int(11) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `load1` float(10,2) DEFAULT NULL,
+  `load5` float(10,2) DEFAULT NULL,
+  `load15` float(10,2) DEFAULT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_myawr_load_info_snap_time` (`snap_time`),
+  KEY `idx_myawr_load_info_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_myawr_load_info_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75303 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
+
+CREATE TABLE `myawr_mysql_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `snap_id` int(11) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `query_cache_size` float(26,2) DEFAULT NULL,
+  `thread_cache_size` float(26,2) DEFAULT NULL,
+  `table_definition_cache` float(26,2) DEFAULT NULL,
+  `max_connections` float(26,2) DEFAULT NULL,
+  `table_open_cache` float(26,2) DEFAULT NULL,
+  `slow_launch_time` float(26,2) DEFAULT NULL,
+  `log_slow_queries` float(26,2) DEFAULT NULL,
+  `max_heap_table_size` float(26,2) DEFAULT NULL,
+  `tmp_table_size` float(26,2) DEFAULT NULL,
+  `open_files_limit` float(26,2) DEFAULT NULL,
+  `Max_used_connections` float(26,2) DEFAULT NULL,
+  `Threads_connected` float(26,2) DEFAULT NULL,
+  `Threads_cached` float(26,2) DEFAULT NULL,
+  `Threads_created` float(26,2) DEFAULT NULL,
+  `Threads_running` float(26,2) DEFAULT NULL,
+  `Connections` float(26,2) DEFAULT NULL,
+  `Questions` float(26,2) DEFAULT NULL,
+  `Com_select` float(26,2) DEFAULT NULL,
+  `Com_insert` float(26,2) DEFAULT NULL,
+  `Com_update` float(26,2) DEFAULT NULL,
+  `Com_delete` float(26,2) DEFAULT NULL,
+  `Bytes_received` float(26,2) DEFAULT NULL,
+  `Bytes_sent` float(26,2) DEFAULT NULL,
+  `Qcache_hits` float(26,2) DEFAULT NULL,
+  `Qcache_inserts` float(26,2) DEFAULT NULL,
+  `Select_full_join` float(26,2) DEFAULT NULL,
+  `Select_scan` float(26,2) DEFAULT NULL,
+  `Slow_queries` float(26,2) DEFAULT NULL,
+  `Com_commit` float(26,2) DEFAULT NULL,
+  `Com_rollback` float(26,2) DEFAULT NULL,
+  `Open_files` float(26,2) DEFAULT NULL,
+  `Open_table_definitions` float(26,2) DEFAULT NULL,
+  `Open_tables` float(26,2) DEFAULT NULL,
+  `Opened_files` float(26,2) DEFAULT NULL,
+  `Opened_table_definitions` float(26,2) DEFAULT NULL,
+  `Opened_tables` float(26,2) DEFAULT NULL,
+  `Created_tmp_disk_tables` float(26,2) DEFAULT NULL,
+  `Created_tmp_files` float(26,2) DEFAULT NULL,
+  `Created_tmp_tables` float(26,2) DEFAULT NULL,
+  `Binlog_cache_disk_use` float(26,2) DEFAULT NULL,
+  `Binlog_cache_use` float(26,2) DEFAULT NULL,
+  `Aborted_clients` float(26,2) DEFAULT NULL,
+  `Sort_merge_passes` float(26,2) DEFAULT NULL,
+  `Sort_range` float(26,2) DEFAULT NULL,
+  `Sort_rows` float(26,2) DEFAULT NULL,
+  `Sort_scan` float(26,2) DEFAULT NULL,
+  `Table_locks_immediate` float(26,2) DEFAULT NULL,
+  `Table_locks_waited` float(26,2) DEFAULT NULL,
+  `Handler_read_first` float(26,2) DEFAULT NULL,
+  `Handler_read_key` float(26,2) DEFAULT NULL,
+  `Handler_read_last` float(26,2) DEFAULT NULL,
+  `Handler_read_next` float(26,2) DEFAULT NULL,
+  `Handler_read_prev` float(26,2) DEFAULT NULL,
+  `Handler_read_rnd` float(26,2) DEFAULT NULL,
+  `Handler_read_rnd_next` float(26,2) DEFAULT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_myawr_mysql_info_snap_time` (`snap_time`),
+  KEY `idx_myawr_mysql_info_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_myawr_mysql_info_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75083 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
 
 CREATE TABLE `myawr_query_review` (
   `checksum` bigint(20) unsigned NOT NULL,
@@ -285,7 +254,6 @@ CREATE TABLE `myawr_query_review` (
   `reviewed_status` varchar(24) DEFAULT NULL,
   PRIMARY KEY (`checksum`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 
 CREATE TABLE `myawr_query_review_history` (
   `hostid_max` int(11) DEFAULT NULL,
@@ -381,6 +349,170 @@ CREATE TABLE `myawr_query_review_history` (
   `Filesort_sum` float DEFAULT NULL,
   `Filesort_on_disk_cnt` float DEFAULT NULL,
   `Filesort_on_disk_sum` float DEFAULT NULL,
-  KEY `idx_myawr_query_review_history_host_id` (`hostid_max`),
-  PRIMARY KEY (`checksum`,`ts_min`,`ts_max`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`checksum`,`ts_min`,`ts_max`),
+  KEY `idx_myawr_query_review_history_host_id` (`hostid_max`,`ts_max`),
+  KEY `idx_myawr_query_review_history_ts_max` (`ts_max`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(ts_max))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
+
+CREATE TABLE `myawr_snapshot` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `host_id` int(11) NOT NULL,
+  `snap_time` datetime NOT NULL,
+  `snap_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_myawr_snapshot_snap_time` (`snap_time`),
+  KEY `idx_myawr_snapshot_host_id` (`host_id`,`snap_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75302 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
+
+CREATE TABLE `myawr_snapshot_events_waits_summary_global_by_event_name` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `snap_id` int(11) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `EVENT_NAME` varchar(128) NOT NULL,
+  `COUNT_STAR` bigint(20) unsigned NOT NULL,
+  `SUM_TIMER_WAIT` bigint(20) unsigned NOT NULL,
+  `MIN_TIMER_WAIT` bigint(20) unsigned NOT NULL,
+  `AVG_TIMER_WAIT` bigint(20) unsigned NOT NULL,
+  `MAX_TIMER_WAIT` bigint(20) unsigned NOT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_waits_summary_global_snap_time` (`snap_time`),
+  KEY `idx_waits_summary_global_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_waits_summary_global_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11500266 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p20130510 VALUES LESS THAN (735363) ENGINE = InnoDB,
+ PARTITION p20130511 VALUES LESS THAN (735364) ENGINE = InnoDB,
+ PARTITION p20130512 VALUES LESS THAN (735365) ENGINE = InnoDB,
+ PARTITION p20130513 VALUES LESS THAN (735366) ENGINE = InnoDB,
+ PARTITION p20130514 VALUES LESS THAN (735367) ENGINE = InnoDB,
+ PARTITION p20130515 VALUES LESS THAN (735368) ENGINE = InnoDB,
+ PARTITION p20130516 VALUES LESS THAN (735369) ENGINE = InnoDB,
+ PARTITION p20130517 VALUES LESS THAN (735370) ENGINE = InnoDB,
+ PARTITION p20130518 VALUES LESS THAN (735371) ENGINE = InnoDB,
+ PARTITION p20130519 VALUES LESS THAN (735372) ENGINE = InnoDB,
+ PARTITION p20130520 VALUES LESS THAN (735373) ENGINE = InnoDB,
+ PARTITION p20130521 VALUES LESS THAN (735374) ENGINE = InnoDB,
+ PARTITION p20130522 VALUES LESS THAN (735375) ENGINE = InnoDB,
+ PARTITION p20130523 VALUES LESS THAN (735376) ENGINE = InnoDB,
+ PARTITION p20130524 VALUES LESS THAN (735377) ENGINE = InnoDB,
+ PARTITION p20130525 VALUES LESS THAN (735378) ENGINE = InnoDB,
+ PARTITION p20130526 VALUES LESS THAN (735379) ENGINE = InnoDB,
+ PARTITION p20130527 VALUES LESS THAN (735380) ENGINE = InnoDB,
+ PARTITION p20130528 VALUES LESS THAN (735381) ENGINE = InnoDB,
+ PARTITION p20130529 VALUES LESS THAN (735382) ENGINE = InnoDB,
+ PARTITION p20130530 VALUES LESS THAN (735383) ENGINE = InnoDB,
+ PARTITION p20130531 VALUES LESS THAN (735384) ENGINE = InnoDB,
+ PARTITION p20130601 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p20130602 VALUES LESS THAN (735386) ENGINE = InnoDB,
+ PARTITION p20130603 VALUES LESS THAN (735387) ENGINE = InnoDB,
+ PARTITION p20130604 VALUES LESS THAN (735388) ENGINE = InnoDB,
+ PARTITION p20130605 VALUES LESS THAN (735389) ENGINE = InnoDB,
+ PARTITION p20130606 VALUES LESS THAN (735390) ENGINE = InnoDB,
+ PARTITION p20130607 VALUES LESS THAN (735391) ENGINE = InnoDB,
+ PARTITION p20130608 VALUES LESS THAN (735392) ENGINE = InnoDB,
+ PARTITION p20130609 VALUES LESS THAN (735393) ENGINE = InnoDB,
+ PARTITION p20130610 VALUES LESS THAN (735394) ENGINE = InnoDB,
+ PARTITION p20130611 VALUES LESS THAN (735395) ENGINE = InnoDB,
+ PARTITION p20130612 VALUES LESS THAN (735396) ENGINE = InnoDB,
+ PARTITION p20130613 VALUES LESS THAN (735397) ENGINE = InnoDB) ;
+
+CREATE TABLE `myawr_snapshot_file_summary_by_event_name` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `snap_id` int(11) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `EVENT_NAME` varchar(128) NOT NULL,
+  `COUNT_READ` bigint(20) unsigned NOT NULL,
+  `COUNT_WRITE` bigint(20) unsigned NOT NULL,
+  `SUM_NUMBER_OF_BYTES_READ` bigint(20) unsigned NOT NULL,
+  `SUM_NUMBER_OF_BYTES_WRITE` bigint(20) unsigned NOT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_file_summary_by_event_snap_time` (`snap_time`),
+  KEY `idx_file_summary_by_event_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_file_summary_by_event_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2296089 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p20130510 VALUES LESS THAN (735363) ENGINE = InnoDB,
+ PARTITION p20130511 VALUES LESS THAN (735364) ENGINE = InnoDB,
+ PARTITION p20130512 VALUES LESS THAN (735365) ENGINE = InnoDB,
+ PARTITION p20130513 VALUES LESS THAN (735366) ENGINE = InnoDB,
+ PARTITION p20130514 VALUES LESS THAN (735367) ENGINE = InnoDB,
+ PARTITION p20130515 VALUES LESS THAN (735368) ENGINE = InnoDB,
+ PARTITION p20130516 VALUES LESS THAN (735369) ENGINE = InnoDB,
+ PARTITION p20130517 VALUES LESS THAN (735370) ENGINE = InnoDB,
+ PARTITION p20130518 VALUES LESS THAN (735371) ENGINE = InnoDB,
+ PARTITION p20130519 VALUES LESS THAN (735372) ENGINE = InnoDB,
+ PARTITION p20130520 VALUES LESS THAN (735373) ENGINE = InnoDB,
+ PARTITION p20130521 VALUES LESS THAN (735374) ENGINE = InnoDB,
+ PARTITION p20130522 VALUES LESS THAN (735375) ENGINE = InnoDB,
+ PARTITION p20130523 VALUES LESS THAN (735376) ENGINE = InnoDB,
+ PARTITION p20130524 VALUES LESS THAN (735377) ENGINE = InnoDB,
+ PARTITION p20130525 VALUES LESS THAN (735378) ENGINE = InnoDB,
+ PARTITION p20130526 VALUES LESS THAN (735379) ENGINE = InnoDB,
+ PARTITION p20130527 VALUES LESS THAN (735380) ENGINE = InnoDB,
+ PARTITION p20130528 VALUES LESS THAN (735381) ENGINE = InnoDB,
+ PARTITION p20130529 VALUES LESS THAN (735382) ENGINE = InnoDB,
+ PARTITION p20130530 VALUES LESS THAN (735383) ENGINE = InnoDB,
+ PARTITION p20130531 VALUES LESS THAN (735384) ENGINE = InnoDB,
+ PARTITION p20130601 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p20130602 VALUES LESS THAN (735386) ENGINE = InnoDB,
+ PARTITION p20130603 VALUES LESS THAN (735387) ENGINE = InnoDB,
+ PARTITION p20130604 VALUES LESS THAN (735388) ENGINE = InnoDB,
+ PARTITION p20130605 VALUES LESS THAN (735389) ENGINE = InnoDB,
+ PARTITION p20130606 VALUES LESS THAN (735390) ENGINE = InnoDB,
+ PARTITION p20130607 VALUES LESS THAN (735391) ENGINE = InnoDB,
+ PARTITION p20130608 VALUES LESS THAN (735392) ENGINE = InnoDB,
+ PARTITION p20130609 VALUES LESS THAN (735393) ENGINE = InnoDB,
+ PARTITION p20130610 VALUES LESS THAN (735394) ENGINE = InnoDB,
+ PARTITION p20130611 VALUES LESS THAN (735395) ENGINE = InnoDB,
+ PARTITION p20130612 VALUES LESS THAN (735396) ENGINE = InnoDB,
+ PARTITION p20130613 VALUES LESS THAN (735397) ENGINE = InnoDB) ;
+
+CREATE TABLE `myawr_swap_net_disk_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `snap_id` int(11) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `swap_in` float(10,2) DEFAULT NULL,
+  `swap_out` float(10,2) DEFAULT NULL,
+  `net_recv` float(10,2) DEFAULT NULL,
+  `net_send` float(10,2) DEFAULT NULL,
+  `file_system` varchar(50) DEFAULT NULL,
+  `total_mb` float(10,2) DEFAULT NULL,
+  `used_mb` float(10,2) DEFAULT NULL,
+  `used_pct` float(10,2) DEFAULT NULL,
+  `mount_point` varchar(50) DEFAULT NULL,
+  `snap_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`,`snap_time`),
+  KEY `idx_myawr_swap_net_info_snap_time` (`snap_time`),
+  KEY `idx_myawr_swap_net_info_snap_host_id` (`snap_id`,`host_id`),
+  KEY `idx_myawr_swap_net_info_host_id` (`host_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75318 DEFAULT CHARSET=utf8
+PARTITION BY RANGE (to_days(snap_time))
+(PARTITION p1305 VALUES LESS THAN (735385) ENGINE = InnoDB,
+ PARTITION p1306 VALUES LESS THAN (735415) ENGINE = InnoDB,
+ PARTITION p1307 VALUES LESS THAN (735446) ENGINE = InnoDB,
+ PARTITION p1308 VALUES LESS THAN (735477) ENGINE = InnoDB,
+ PARTITION p1309 VALUES LESS THAN (735507) ENGINE = InnoDB,
+ PARTITION p1310 VALUES LESS THAN (735538) ENGINE = InnoDB,
+ PARTITION p1311 VALUES LESS THAN (735568) ENGINE = InnoDB,
+ PARTITION p1312 VALUES LESS THAN (735599) ENGINE = InnoDB) ;
+
