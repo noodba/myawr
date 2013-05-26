@@ -7,6 +7,8 @@
 <p>&nbsp;</p>
 <p>If you like to read pdf,pls click <a href="http://www.noodba.com/myawr.pdf">myawr_reference_guid</a></p>
 <p>&nbsp;</p>
+<p><h4> <strong>Pls read change log.txt before you deploy the script.</strong></h4></p>
+<p>&nbsp;</p>
 <h2> <strong>2.Myawr Data Model</strong></h2>
 <p>myawr db include tables list:<br />
 mysql&gt; show tables;<br />
