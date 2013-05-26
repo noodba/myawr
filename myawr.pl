@@ -63,7 +63,7 @@ my $HZ = 100;
 
 #-----> Get SysInfo (from /proc/vmstat): SWAP
 my %swap1 = (
-  "pswpin"  => 0,
+	"pswpin"  => 0,
 	"pswpout" => 0
 );
 my $swap_not_first = 0;
@@ -107,7 +107,8 @@ my $wr_ios_s;
 
 
 my ( $filesystem, $totalmb, $usedmb, $freemb, $usedpct, $mountpoint );
-
+my $snap_id;
+my $snap_time;
 
 # Get options info
 &get_options();
@@ -125,7 +126,6 @@ sleep(1);
 &get_netinfo();
 &get_ioinfo();
 
-my $snap_id;
 
 &get_osstat();
 
@@ -144,7 +144,7 @@ sub print_usage {
 
 ==========================================================================================
 Info  :
-        Created(modified) By noodba (www.noodba.com).
+        Created(modified) By noodba (www.noodba.com) .
         References: orzdba.pl (zhuxu\@taobao.com)
 Usage :
 Command line options :
@@ -552,20 +552,20 @@ sub get_mysqlstat {
     # Func : Get Innodb Status from Command: 'Show Engine Innodb Status'  ________________end
 
 	$sql =
-	qq{insert into myawr.myawr_mysql_info(snap_id,host_id,query_cache_size,thread_cache_size,table_definition_cache,max_connections,table_open_cache,slow_launch_time,max_heap_table_size,tmp_table_size,open_files_limit,Max_used_connections,Threads_connected,Threads_cached,Threads_created,Threads_running,Connections,Questions,Com_select,Com_insert,Com_update,Com_delete,Bytes_received,Bytes_sent,Qcache_hits,Qcache_inserts,Select_full_join,Select_scan,Slow_queries,Com_commit,Com_rollback,Open_files,Open_table_definitions,Open_tables,Opened_files,Opened_table_definitions,Opened_tables,Created_tmp_disk_tables,Created_tmp_files,Created_tmp_tables,Binlog_cache_disk_use,Binlog_cache_use,Aborted_clients,Sort_merge_passes,Sort_range,Sort_rows,Sort_scan,Table_locks_immediate,Table_locks_waited,Handler_read_first,Handler_read_key,Handler_read_last,Handler_read_next,Handler_read_prev,Handler_read_rnd,Handler_read_rnd_next) values($snap_id,$tid,$vars->{"query_cache_size"},$vars->{"thread_cache_size"},$vars->{"table_definition_cache"},$vars->{"max_connections"},$vars->{"table_open_cache"},$vars->{"slow_launch_time"},$vars->{"max_heap_table_size"},$vars->{"tmp_table_size"},$vars->{"open_files_limit"},$mystat2->{"Max_used_connections"},$mystat2->{"Threads_connected"},$mystat2->{"Threads_cached"},$mystat2->{"Threads_created"},$mystat2->{"Threads_running"},$mystat2->{"Connections"},$mystat2->{"Questions"},$mystat2->{"Com_select"},$mystat2->{"Com_insert"},$mystat2->{"Com_update"},$mystat2->{"Com_delete"},$mystat2->{"Bytes_received"},$mystat2->{"Bytes_sent"},$mystat2->{"Qcache_hits"},$mystat2->{"Qcache_inserts"},$mystat2->{"Select_full_join"},$mystat2->{"Select_scan"},$mystat2->{"Slow_queries"},$mystat2->{"Com_commit"},$mystat2->{"Com_rollback"},$mystat2->{"Open_files"},$mystat2->{"Open_table_definitions"},$mystat2->{"Open_tables"},$mystat2->{"Opened_files"},$mystat2->{"Opened_table_definitions"},$mystat2->{"Opened_tables"},$mystat2->{"Created_tmp_disk_tables"},$mystat2->{"Created_tmp_files"},$mystat2->{"Created_tmp_tables"},$mystat2->{"Binlog_cache_disk_use"},$mystat2->{"Binlog_cache_use"},$mystat2->{"Aborted_clients"},$mystat2->{"Sort_merge_passes"},$mystat2->{"Sort_range"},$mystat2->{"Sort_rows"},$mystat2->{"Sort_scan"},$mystat2->{"Table_locks_immediate"},$mystat2->{"Table_locks_waited"},$mystat2->{"Handler_read_first"},$mystat2->{"Handler_read_key"},$mystat2->{"Handler_read_last"},$mystat2->{"Handler_read_next"},$mystat2->{"Handler_read_prev"},$mystat2->{"Handler_read_rnd"},$mystat2->{"Handler_read_rnd_next"})};
+	qq{insert into myawr.myawr_mysql_info(snap_id,host_id,query_cache_size,thread_cache_size,table_definition_cache,max_connections,table_open_cache,slow_launch_time,max_heap_table_size,tmp_table_size,open_files_limit,Max_used_connections,Threads_connected,Threads_cached,Threads_created,Threads_running,Connections,Questions,Com_select,Com_insert,Com_update,Com_delete,Bytes_received,Bytes_sent,Qcache_hits,Qcache_inserts,Select_full_join,Select_scan,Slow_queries,Com_commit,Com_rollback,Open_files,Open_table_definitions,Open_tables,Opened_files,Opened_table_definitions,Opened_tables,Created_tmp_disk_tables,Created_tmp_files,Created_tmp_tables,Binlog_cache_disk_use,Binlog_cache_use,Aborted_clients,Sort_merge_passes,Sort_range,Sort_rows,Sort_scan,Table_locks_immediate,Table_locks_waited,Handler_read_first,Handler_read_key,Handler_read_last,Handler_read_next,Handler_read_prev,Handler_read_rnd,Handler_read_rnd_next,snap_time) values($snap_id,$tid,$vars->{"query_cache_size"},$vars->{"thread_cache_size"},$vars->{"table_definition_cache"},$vars->{"max_connections"},$vars->{"table_open_cache"},$vars->{"slow_launch_time"},$vars->{"max_heap_table_size"},$vars->{"tmp_table_size"},$vars->{"open_files_limit"},$mystat2->{"Max_used_connections"},$mystat2->{"Threads_connected"},$mystat2->{"Threads_cached"},$mystat2->{"Threads_created"},$mystat2->{"Threads_running"},$mystat2->{"Connections"},$mystat2->{"Questions"},$mystat2->{"Com_select"},$mystat2->{"Com_insert"},$mystat2->{"Com_update"},$mystat2->{"Com_delete"},$mystat2->{"Bytes_received"},$mystat2->{"Bytes_sent"},$mystat2->{"Qcache_hits"},$mystat2->{"Qcache_inserts"},$mystat2->{"Select_full_join"},$mystat2->{"Select_scan"},$mystat2->{"Slow_queries"},$mystat2->{"Com_commit"},$mystat2->{"Com_rollback"},$mystat2->{"Open_files"},$mystat2->{"Open_table_definitions"},$mystat2->{"Open_tables"},$mystat2->{"Opened_files"},$mystat2->{"Opened_table_definitions"},$mystat2->{"Opened_tables"},$mystat2->{"Created_tmp_disk_tables"},$mystat2->{"Created_tmp_files"},$mystat2->{"Created_tmp_tables"},$mystat2->{"Binlog_cache_disk_use"},$mystat2->{"Binlog_cache_use"},$mystat2->{"Aborted_clients"},$mystat2->{"Sort_merge_passes"},$mystat2->{"Sort_range"},$mystat2->{"Sort_rows"},$mystat2->{"Sort_scan"},$mystat2->{"Table_locks_immediate"},$mystat2->{"Table_locks_waited"},$mystat2->{"Handler_read_first"},$mystat2->{"Handler_read_key"},$mystat2->{"Handler_read_last"},$mystat2->{"Handler_read_next"},$mystat2->{"Handler_read_prev"},$mystat2->{"Handler_read_rnd"},$mystat2->{"Handler_read_rnd_next"}, \"$snap_time\")};
 
 	#print $sql;
 
 	$dbh_save->do($sql);
 
 	$sql =
-	qq{insert into myawr.myawr_innodb_info(snap_id,host_id,Innodb_rows_inserted,Innodb_rows_updated,Innodb_rows_deleted,Innodb_rows_read,Innodb_buffer_pool_read_requests,Innodb_buffer_pool_reads,Innodb_buffer_pool_pages_data,  Innodb_buffer_pool_pages_free,  Innodb_buffer_pool_pages_dirty,  Innodb_buffer_pool_pages_flushed,  Innodb_data_reads,  Innodb_data_writes,  Innodb_data_read,  Innodb_data_written,  Innodb_os_log_fsyncs,  Innodb_os_log_written,  history_list,  log_bytes_written,  log_bytes_flushed,  last_checkpoint,  queries_inside,  queries_queued,  read_views, innodb_open_files,innodb_log_waits)  values($snap_id,$tid,$mystat2->{"Innodb_rows_inserted"},$mystat2->{"Innodb_rows_updated"},$mystat2->{"Innodb_rows_deleted"},$mystat2->{"Innodb_rows_read"},$mystat2->{"Innodb_buffer_pool_read_requests"},$mystat2->{"Innodb_buffer_pool_reads"},$mystat2->{"Innodb_buffer_pool_pages_data"},$mystat2->{"Innodb_buffer_pool_pages_free"},$mystat2->{"Innodb_buffer_pool_pages_dirty"},$mystat2->{"Innodb_buffer_pool_pages_flushed"},$mystat2->{"Innodb_data_reads"},$mystat2->{"Innodb_data_writes"},$mystat2->{"Innodb_data_read"},$mystat2->{"Innodb_data_written"},$mystat2->{"Innodb_os_log_fsyncs"},$mystat2->{"Innodb_os_log_written"},$innodb_status{"history_list"},$innodb_status{"log_bytes_written"},$innodb_status{"log_bytes_flushed"},$innodb_status{"last_checkpoint"},$innodb_status{"queries_inside"},$innodb_status{"queries_queued"},$innodb_status{"read_views"},$vars->{"innodb_open_files"},$mystat2->{"Innodb_log_waits"})};
+	qq{insert into myawr.myawr_innodb_info(snap_id,host_id,Innodb_rows_inserted,Innodb_rows_updated,Innodb_rows_deleted,Innodb_rows_read,Innodb_buffer_pool_read_requests,Innodb_buffer_pool_reads,Innodb_buffer_pool_pages_data,  Innodb_buffer_pool_pages_free,  Innodb_buffer_pool_pages_dirty,  Innodb_buffer_pool_pages_flushed,  Innodb_data_reads,  Innodb_data_writes,  Innodb_data_read,  Innodb_data_written,  Innodb_os_log_fsyncs,  Innodb_os_log_written,  history_list,  log_bytes_written,  log_bytes_flushed,  last_checkpoint,  queries_inside,  queries_queued,  read_views, innodb_open_files,innodb_log_waits,snap_time)  values($snap_id,$tid,$mystat2->{"Innodb_rows_inserted"},$mystat2->{"Innodb_rows_updated"},$mystat2->{"Innodb_rows_deleted"},$mystat2->{"Innodb_rows_read"},$mystat2->{"Innodb_buffer_pool_read_requests"},$mystat2->{"Innodb_buffer_pool_reads"},$mystat2->{"Innodb_buffer_pool_pages_data"},$mystat2->{"Innodb_buffer_pool_pages_free"},$mystat2->{"Innodb_buffer_pool_pages_dirty"},$mystat2->{"Innodb_buffer_pool_pages_flushed"},$mystat2->{"Innodb_data_reads"},$mystat2->{"Innodb_data_writes"},$mystat2->{"Innodb_data_read"},$mystat2->{"Innodb_data_written"},$mystat2->{"Innodb_os_log_fsyncs"},$mystat2->{"Innodb_os_log_written"},$innodb_status{"history_list"},$innodb_status{"log_bytes_written"},$innodb_status{"log_bytes_flushed"},$innodb_status{"last_checkpoint"},$innodb_status{"queries_inside"},$innodb_status{"queries_queued"},$innodb_status{"read_views"},$vars->{"innodb_open_files"},$mystat2->{"Innodb_log_waits"}, \"$snap_time\")};
  
    	#print $sql;
 	$dbh_save->do($sql);
 	
     $sql =
-	qq{insert into myawr.myawr_isam_info(snap_id,host_id,key_buffer_size,join_buffer_size,sort_buffer_size,Key_blocks_not_flushed,Key_blocks_unused,Key_blocks_used,Key_read_requests,Key_reads,Key_write_requests,Key_writes)  values($snap_id,$tid,$vars->{"key_buffer_size"},$vars->{"join_buffer_size"},$vars->{"sort_buffer_size"},$mystat2->{"Key_blocks_not_flushed"},$mystat2->{"Key_blocks_unused"},$mystat2->{"Key_blocks_used"},$mystat2->{"Key_read_requests"},$mystat2->{"Key_reads"},$mystat2->{"Key_write_requests"},$mystat2->{"Key_writes"})};
+	qq{insert into myawr.myawr_isam_info(snap_id,host_id,key_buffer_size,join_buffer_size,sort_buffer_size,Key_blocks_not_flushed,Key_blocks_unused,Key_blocks_used,Key_read_requests,Key_reads,Key_write_requests,Key_writes,snap_time)  values($snap_id,$tid,$vars->{"key_buffer_size"},$vars->{"join_buffer_size"},$vars->{"sort_buffer_size"},$mystat2->{"Key_blocks_not_flushed"},$mystat2->{"Key_blocks_unused"},$mystat2->{"Key_blocks_used"},$mystat2->{"Key_read_requests"},$mystat2->{"Key_reads"},$mystat2->{"Key_write_requests"},$mystat2->{"Key_writes"}, \"$snap_time\")};
     $dbh_save->do($sql);
     
     my($sec,$min,$hour,$day,$mon,$year) = gmtime($mystat2->{"Uptime"});
@@ -575,11 +575,6 @@ sub get_mysqlstat {
     $sql =
 	qq{update myawr.myawr_host set uptime="$varuptime",check_time=now() where id=$tid};
     $dbh_save->do($sql);
-
-
-	$sql =
-	qq{insert into myawr.myawr_swap_net_disk_info(snap_id,host_id,swap_in,swap_out,net_recv,net_send,file_system,total_mb,used_mb,used_pct,mount_point) values($snap_id,$tid, $swapin,$swapout,$diff_recv,$diff_send,\"$filesystem\", $totalmb, $usedmb,  $usedpct, \"$mountpoint\" )};
-	$dbh_save->do($sql);
     
     $sth->finish;
 	$dbh->disconnect();
@@ -604,7 +599,7 @@ sub get_osstat {
 		return;
 	}	
     
-    #my $sdate =`date +"%Y-%m-%d %H:%M:%S"`;
+    $snap_time =`date +"%Y-%m-%d %H:%M:%S"`;
     
  	my $sth = $dbh_save->prepare("SELECT max(snap_id) from myawr.myawr_snapshot where host_id=$tid and snap_id is not null");
 	$sth->execute();
@@ -616,18 +611,22 @@ sub get_osstat {
     	$snap_id=$old_snap_id+1;
     }
     
-    $sql =qq{insert into myawr.myawr_snapshot(host_id,snap_time,snap_id) values($tid, now(),$snap_id)};
+    $sql =qq{insert into myawr.myawr_snapshot(host_id,snap_time,snap_id) values($tid, \"$snap_time\",$snap_id)};
     $dbh_save->do($sql);
 
-    $sql =qq{insert into myawr.myawr_load_info(snap_id,host_id,load1,load5,load15) values($snap_id,$tid, $sys_load[0],$sys_load[1],$sys_load[2])};
+    $sql =qq{insert into myawr.myawr_load_info(snap_id,host_id,load1,load5,load15,snap_time) values($snap_id,$tid, $sys_load[0],$sys_load[1],$sys_load[2], \"$snap_time\")};
     $dbh_save->do($sql);
 
-	$sql =qq{insert into myawr.myawr_cpu_info(snap_id,host_id,cpu_user,cpu_system,cpu_idle,cpu_iowait) values($snap_id,$tid, $user_diff_1,$system_diff_1,$idle_diff_1,$iowait_diff_1)};
+	$sql =qq{insert into myawr.myawr_cpu_info(snap_id,host_id,cpu_user,cpu_system,cpu_idle,cpu_iowait,snap_time) values($snap_id,$tid, $user_diff_1,$system_diff_1,$idle_diff_1,$iowait_diff_1, \"$snap_time\")};
 	$dbh_save->do($sql);
 
-	$sql =qq{insert into myawr.myawr_io_info(snap_id,host_id,rd_ios_s,wr_ios_s,rkbs,wkbs,queue,wait,svc_t,busy) values($snap_id,$tid, $rd_ios_s,$wr_ios_s ,$rkbs,$wkbs,$queue,$wait,$svc_t,$busy)};
+	$sql =qq{insert into myawr.myawr_io_info(snap_id,host_id,rd_ios_s,wr_ios_s,rkbs,wkbs,queue,wait,svc_t,busy,snap_time) values($snap_id,$tid, $rd_ios_s,$wr_ios_s ,$rkbs,$wkbs,$queue,$wait,$svc_t,$busy, \"$snap_time\")};
 	$dbh_save->do($sql); 
 
+	$sql =
+	qq{insert into myawr.myawr_swap_net_disk_info(snap_id,host_id,swap_in,swap_out,net_recv,net_send,file_system,total_mb,used_mb,used_pct,mount_point,snap_time) values($snap_id,$tid, $swapin,$swapout,$diff_recv,$diff_send,\"$filesystem\", $totalmb, $usedmb,  $usedpct, \"$mountpoint\" , \"$snap_time\")};
+	$dbh_save->do($sql);
+	
     $sth->finish;
 	$dbh_save->disconnect();
 }
@@ -659,7 +658,7 @@ sub get_perfstat {
 		}
 
 
-		my $sql2 = qq{ insert into myawr_snapshot_events_waits_summary_global_by_event_name(snap_id,host_id,EVENT_NAME,COUNT_STAR,SUM_TIMER_WAIT,MIN_TIMER_WAIT,AVG_TIMER_WAIT,MAX_TIMER_WAIT) values ($snap_id,$tid, ?,?,?, ?, ? ,?) };
+		my $sql2 = qq{ insert into myawr_snapshot_events_waits_summary_global_by_event_name(snap_id,host_id,EVENT_NAME,COUNT_STAR,SUM_TIMER_WAIT,MIN_TIMER_WAIT,AVG_TIMER_WAIT,MAX_TIMER_WAIT,snap_time) values ($snap_id,$tid, ?,?,?, ?, ? ,?,?) };
 		my $sth2 = $dbh_save->prepare( $sql2 );
 		
 		$sth = $dbh->prepare("select * from performance_schema.events_waits_summary_global_by_event_name");
@@ -670,13 +669,14 @@ sub get_perfstat {
 			    $sth2->bind_param( 3, $result2[2], SQL_INTEGER );
 			    $sth2->bind_param( 4, $result2[3], SQL_INTEGER );
 			    $sth2->bind_param( 5, $result2[4], SQL_INTEGER );
-			    $sth2->bind_param( 6, $result2[5], SQL_INTEGER );			    
+			    $sth2->bind_param( 6, $result2[5], SQL_INTEGER );
+			    $sth2->bind_param( 7, $snap_time, SQL_DATE );			    
 			    $sth2->execute();
 			    $dbh_save->commit();
 	    
 		  }
 
-		$sql2 = qq{ insert into myawr_snapshot_file_summary_by_event_name(snap_id,host_id,EVENT_NAME,COUNT_READ,COUNT_WRITE,SUM_NUMBER_OF_BYTES_READ,SUM_NUMBER_OF_BYTES_WRITE) values ($snap_id,$tid, ?,?,?, ?, ? ) };
+		$sql2 = qq{ insert into myawr_snapshot_file_summary_by_event_name(snap_id,host_id,EVENT_NAME,COUNT_READ,COUNT_WRITE,SUM_NUMBER_OF_BYTES_READ,SUM_NUMBER_OF_BYTES_WRITE,snap_time) values ($snap_id,$tid, ?,?,?, ?, ? ,?) };
 		$sth2 = $dbh_save->prepare( $sql2 );
 				  
 		$sth = $dbh->prepare("select * from performance_schema.file_summary_by_event_name");
@@ -686,7 +686,8 @@ sub get_perfstat {
 			    $sth2->bind_param( 2, $result2[1], SQL_INTEGER);
 			    $sth2->bind_param( 3, $result2[2], SQL_INTEGER );
 			    $sth2->bind_param( 4, $result2[3], SQL_INTEGER );
-			    $sth2->bind_param( 5, $result2[4], SQL_INTEGER );		    
+			    $sth2->bind_param( 5, $result2[4], SQL_INTEGER );
+			    $sth2->bind_param( 6, $snap_time, SQL_DATE );		    
 			    $sth2->execute();
 			    $dbh_save->commit();
 	    
