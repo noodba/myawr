@@ -1,7 +1,9 @@
   <h2> <strong>1.What is myawr</strong></h2>
 <p>Myawr is a tool for collecting and analyzing performance data for MySQL database (including os info ,mysql status info and Slow Query Log  all of details). The idea comes from Oracle awr. Myawr periodic collect data and save to the database as snapshots. Myawr was designed as CS architecture.Myawr depends on (but not necessary) performance schema of MySQL database. Myawr consists of two parts:</p>
 <p><b>myawr.pl</b><b>&#8212;&#8212;&#8211;a perl script for collecting mysql performance data<br />
-</b><b>myawrrpt.pl&#8212;&#8211;a perl script for analyzing mysql performance data</b></p>
+</b><b>myawrrpt.pl&#8212;&#8211;a perl script for analyzing mysql performance data</b>
+<b>myawrsrpt.pl-----a perl script for analyzing mysql peak time data</b>
+</p>
 <p>Myawr relies on the <a href="http://www.percona.com/software/percona-toolkit/">Percona Toolkit</a> to do the slow query log collection. Specifically you can run <a href="http://www.percona.com/doc/percona-toolkit/2.0/pt-query-digest.html">pt-query-digest</a>. To parse your slow logs and insert them into your server database for reporting and analyzing.</p>
 <p>Thanks to orzdba.pl (<a href="mailto:zhuxu@taobao.com">zhuxu@taobao.com</a>).</p>
 <p>&nbsp;</p>
@@ -11,27 +13,33 @@
 <p>&nbsp;</p>
 <h2> <strong>2.Myawr Data Model</strong></h2>
 <p>myawr db include tables list:<br />
-mysql&gt; show tables;<br />
-+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-+<br />
-| Tables_in_myawr                                             |<br />
-+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-+<br />
-| myawr_cpu_info                                               |<br />
-| myawr_host                                                      |<br />
-| myawr_innodb_info                                          |<br />
-| myawr_io_info                                                  |<br />
-| myawr_isam_info                                             |<br />
-| myawr_load_info                                              |<br />
-| myawr_mysql_info                                           |<br />
-| myawr_query_review                                       |<br />
-| myawr_query_review_history                          |<br />
-| myawr_snapshot                                             |<br />
-| myawr_snapshot_events_waits_summary_by_instance |<br />
-| myawr_snapshot_events_waits_summary_global_by_event_name |<br />
-| myawr_snapshot_file_summary_by_event_name |<br />
-| myawr_snapshot_file_summary_by_instance |<br />
-| myawr_swap_net_disk_info                             |<br />
-+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-+<br />
-15 rows in set (0.01 sec)</p>
+<pre>
+mysql> show tables;
++----------------------------------------------------------+
+| Tables_in_myawr                                          |
++----------------------------------------------------------+
+| myawr_active_session                                     |
+| myawr_cpu_info                                           |
+| myawr_engine_innodb_status                               |
+| myawr_host                                               |
+| myawr_innodb_info                                        |
+| myawr_innodb_lock_waits                                  |
+| myawr_innodb_locks                                       |
+| myawr_innodb_trx                                         |
+| myawr_io_info                                            |
+| myawr_isam_info                                          |
+| myawr_load_info                                          |
+| myawr_mysql_info                                         |
+| myawr_query_review                                       |
+| myawr_query_review_history                               |
+| myawr_snapshot                                           |
+| myawr_snapshot_events_waits_summary_global_by_event_name |
+| myawr_snapshot_file_summary_by_event_name                |
+| myawr_swap_net_disk_info                                 |
++----------------------------------------------------------+
+18 rows in set (0.00 sec)
+</pre>
+</p>
 <p>some key tables:<br />
 myawr_host&#8211; mysql instance config table<br />
 myawr_snapshot &#8212; snapshot table,exec myawr.pl a time as a shapshot<br />
