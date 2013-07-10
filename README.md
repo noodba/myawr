@@ -110,7 +110,6 @@ pt-query-digest  Parameters:
 $event->{hostid}=6	db instance register id(Reference myawr_host.id)
 
 The pt-query-digest only support mechanism for switching a slow log file every day just now, named like slow_20130521.log(slow_date -d "-1 day" +"%Y%m%d".log)
-
 </pre>
 <h2> <strong>4. Dependencies</strong></h2>
 <p>perl-DBD-mysql<br />
