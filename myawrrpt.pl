@@ -522,7 +522,7 @@ $sec_Innodb_os_log_written=int(  ($end_Innodb_os_log_written -$start_Innodb_os_l
 <tr><td>Innodb_rows_inserted(s):</td><td align=\"right\">$sec_Innodb_rows_inserted </td></tr>
 <tr><td>Innodb_rows_updated(s):</td><td align=\"right\"> $sec_Innodb_rows_updated </td></tr>
 <tr><td>Innodb_rows_deleted(s):</td><td align=\"right\"> $sec_Innodb_rows_deleted</td></tr>
-<tr><td>Innodb_rows_read(/s):</td><td align=\"right\"> $sec_Innodb_rows_read </td></tr>
+<tr><td>Innodb_rows_read(s):</td><td align=\"right\"> $sec_Innodb_rows_read </td></tr>
 
 <tr><td>Innodb_data_reads(s):</td><td align=\"right\"> $sec_Innodb_data_reads </td></tr>
 <tr><td>Innodb_data_writes(s):</td><td align=\"right\"> $sec_Innodb_data_writes</td></tr>
@@ -631,6 +631,199 @@ if(($end_Connections - $start_Connections) >0){
 			$n= $n+ 0 +$rskip;
 		}
 		$sql.="$end_snap_id";
+		
+		
+my $isfirst=1;
+my $sinterval;
+my $insert_diff ;
+my $update_diff;
+my $delete_diff;
+my $select_diff;
+my $read_request;
+my $read;
+my $innodb_rows_inserted_diff;
+my $innodb_rows_updated_diff;
+my $innodb_rows_deleted_diff;
+my $innodb_rows_read_diff;
+my $innodb_os_log_fsyncs_diff;
+my $innodb_os_log_written_diff;
+my $stps;
+my $shits;
+
+my($pre_snap_time,$pre_unix_s ,$pre_Innodb_rows_inserted,$pre_Innodb_rows_updated,$pre_Innodb_rows_deleted,$pre_Innodb_rows_read,$pre_Innodb_buffer_pool_read_requests,$pre_Innodb_buffer_pool_reads,$pre_Innodb_os_log_fsyncs,$pre_Innodb_os_log_written,$pre_Com_select,$pre_Com_delete,$pre_Com_insert,$pre_Com_update);
+
+		$sth = $dbh->prepare("select a.snap_time,UNIX_TIMESTAMP(a.snap_time) unix_s ,a.Innodb_rows_inserted,a.Innodb_rows_updated,a.Innodb_rows_deleted,a.Innodb_rows_read,a.Innodb_buffer_pool_read_requests,a.Innodb_buffer_pool_reads,a.Innodb_os_log_fsyncs,a.Innodb_os_log_written, b.Com_select,b.Com_delete,b.Com_insert,b.Com_update ,b.Threads_running  from myawr_innodb_info a,myawr_mysql_info b where a.host_id=b.host_id and a.snap_id=b.snap_id and  a.host_id=$tid and  a.snap_id in ($sql) and a.snap_time between \"$start_snap_time\" and \"$end_snap_time\" ");
+		$sth->execute();
+
+	    print MYAWR_REPORT "<p /><h3>Innodb activity(1)</h3><p /><table border=\"1\"> <tr><th>Snap Time</th><th>Com_ins</th><th>Com_upd</th><th>Com_del</th><th>Com_sel</th><th>TPS</th><th>Buf_read_req</th><th>Hit%</th><th>Innodb_rows_ins</th><th>Innodb_rows_upd</th><th>Innodb_rows_del</th><th>Innodb_rows_read</th><th>Innodb_log_fsyncs</th><th>Innodb_log_wrn(k/s)</th><th>Threads_running</th></tr>";
+				
+		while( my @result = $sth->fetchrow_array ){
+			if ($isfirst==1){
+				$pre_snap_time=$result[0];
+				$pre_unix_s=$result[1]; 
+				$pre_Innodb_rows_inserted=$result[2];
+				$pre_Innodb_rows_updated=$result[3];
+				$pre_Innodb_rows_deleted=$result[4];
+				$pre_Innodb_rows_read=$result[5];
+				$pre_Innodb_buffer_pool_read_requests=$result[6];
+				$pre_Innodb_buffer_pool_reads=$result[7];
+				$pre_Innodb_os_log_fsyncs=$result[8];
+				$pre_Innodb_os_log_written=$result[9];
+				$pre_Com_select=$result[10];
+				$pre_Com_delete=$result[11];
+				$pre_Com_insert=$result[12];
+				$pre_Com_update=$result[13];
+				
+				$isfirst=0;
+		   }else {
+		       $sinterval=$result[1]-$pre_unix_s;
+               if ($sinterval>0){
+
+					 $select_diff = int(($result[10]-$pre_Com_select) / $sinterval);
+					 $delete_diff =int( ($result[11]-$pre_Com_delete) / $sinterval);
+					 $insert_diff = int(($result[12]-$pre_Com_insert) / $sinterval);
+					 $update_diff = int(($result[13]-$pre_Com_update) / $sinterval);
+		             $stps=$insert_diff+$update_diff+$delete_diff;
+		
+					 $read_request = int(($result[6]-$pre_Innodb_buffer_pool_read_requests) / $sinterval);
+					 $read         = int(($result[7]-$pre_Innodb_buffer_pool_reads) / $sinterval);
+		                         
+					 if ($read_request>0) {
+						$shits = int(($read_request-$read)/$read_request*10000)/100;
+					 }	
+					
+					 $innodb_rows_inserted_diff = int(($result[2]-$pre_Innodb_rows_inserted) / $sinterval);
+					 $innodb_rows_updated_diff  = int(($result[3]-$pre_Innodb_rows_updated  ) / $sinterval);
+					 $innodb_rows_deleted_diff  = int(($result[4]-$pre_Innodb_rows_deleted ) / $sinterval);
+					 $innodb_rows_read_diff     = int(($result[5]-$pre_Innodb_rows_read) / $sinterval);
+		
+					 $innodb_os_log_fsyncs_diff = int(($result[8]- $pre_Innodb_os_log_fsyncs ) / $sinterval);
+					 $innodb_os_log_written_diff= int(($result[9]-$pre_Innodb_os_log_written) / $sinterval/1024);
+			
+			         print MYAWR_REPORT "<tr><td>$result[0]</td><td align=\"right\">$insert_diff</td><td align=\"right\">$update_diff</td><td>$delete_diff</td><td>$select_diff</td><td>$stps</td><td>$read_request</td><td>$shits</td><td>$innodb_rows_inserted_diff</td><td>$innodb_rows_updated_diff</td><td>$innodb_rows_deleted_diff</td><td>$innodb_rows_read_diff</td><td>$innodb_os_log_fsyncs_diff</td><td>$innodb_os_log_written_diff</td><td>$result[14]</td></tr>";  
+		    		 print MYAWR_REPORT "\n";
+		       }
+				$pre_snap_time=$result[0];
+				$pre_unix_s=$result[1]; 
+				$pre_Innodb_rows_inserted=$result[2];
+				$pre_Innodb_rows_updated=$result[3];
+				$pre_Innodb_rows_deleted=$result[4];
+				$pre_Innodb_rows_read=$result[5];
+				$pre_Innodb_buffer_pool_read_requests=$result[6];
+				$pre_Innodb_buffer_pool_reads=$result[7];
+				$pre_Innodb_os_log_fsyncs=$result[8];
+				$pre_Innodb_os_log_written=$result[9];
+				$pre_Com_select=$result[10];
+				$pre_Com_delete=$result[11];
+				$pre_Com_insert=$result[12];
+				$pre_Com_update=$result[13];
+		   		}
+                
+		  }
+    print MYAWR_REPORT "</table><p /><p />";			
+		
+
+
+my $innodb_bp_pages_flushed_diff;
+my $innodb_data_reads_diff  ;
+my $innodb_data_writes_diff;
+my $innodb_data_read_diff;
+my $innodb_data_written_diff;
+my $unflushed_log;
+my $uncheckpointed_bytes;
+
+my($pre_Innodb_buffer_pool_pages_data,$pre_Innodb_buffer_pool_pages_free,$pre_Innodb_buffer_pool_pages_dirty,$pre_Innodb_buffer_pool_pages_flushed,$pre_Innodb_data_reads,$pre_Innodb_data_writes,$pre_Innodb_data_read,$pre_Innodb_data_written,$pre_history_list,$pre_log_bytes_written,$pre_log_bytes_flushed,$pre_last_checkpoint,$pre_queries_inside,$pre_queries_queued,$pre_read_views);
+
+$isfirst=1;
+
+
+		$sth = $dbh->prepare("select a.snap_time,UNIX_TIMESTAMP(a.snap_time) unix_s,Innodb_buffer_pool_pages_data,Innodb_buffer_pool_pages_free,Innodb_buffer_pool_pages_dirty,Innodb_buffer_pool_pages_flushed,Innodb_data_reads,Innodb_data_writes,Innodb_data_read,Innodb_data_written,history_list,log_bytes_written,log_bytes_flushed,last_checkpoint,queries_inside,queries_queued,read_views  from myawr_innodb_info a where a.host_id=$tid and  a.snap_id in ($sql) and a.snap_time between \"$start_snap_time\" and \"$end_snap_time\" ");
+		$sth->execute();
+
+	    print MYAWR_REPORT "<p /><h3>Innodb activity(2)</h3><p /><table border=\"1\"> <tr><th>Snap Time</th><th>Indb_pdata</th><th>Indb_pfree</th><th>Indb_pdirty</th><th>Indb_pflush</th><th>Indb_dreads</th><th>Indb_dwrites</th><th>Indb_dread(k/s)</th><th>Indb_dwritten(k/s)</th><th>his_list</th><th>Inlog_uflush</th><th>Inlog_uckpt</th><th>queries_inside</th><th>queries_queued</th><th>read_views</th></tr>";				
+		
+		while( my @result = $sth->fetchrow_array ){
+			if ($isfirst==1){
+	    		$pre_snap_time=$result[0];
+				$pre_unix_s=$result[1]; 
+				
+				$pre_Innodb_buffer_pool_pages_data=$result[2];
+				$pre_Innodb_buffer_pool_pages_free=$result[3];
+				$pre_Innodb_buffer_pool_pages_dirty=$result[4];
+				$pre_Innodb_buffer_pool_pages_flushed=$result[5];
+
+				$pre_Innodb_data_reads=$result[6];
+				$pre_Innodb_data_writes=$result[7];
+				$pre_Innodb_data_read=$result[8];
+				$pre_Innodb_data_written=$result[9];
+				$pre_history_list=$result[10];
+				$pre_log_bytes_written=$result[11];
+				$pre_log_bytes_flushed=$result[12];
+				$pre_last_checkpoint=$result[13];
+
+				$pre_queries_inside=$result[14];
+				$pre_queries_queued=$result[15];
+				$pre_read_views=$result[16];
+				
+				$isfirst=0;
+		   }else {
+		       $sinterval=$result[1]-$pre_unix_s;
+               if ($sinterval>0){
+
+				 $innodb_bp_pages_flushed_diff=int(($result[5]-$pre_Innodb_buffer_pool_pages_flushed)/$sinterval);
+				 $innodb_data_reads_diff =int(($result[6]-$pre_Innodb_data_reads)/$sinterval) ;
+				 $innodb_data_writes_diff=int(($result[7]-$pre_Innodb_data_writes)/$sinterval);
+				 $innodb_data_read_diff=int(($result[8]-$pre_Innodb_data_read)/$sinterval/1024);
+				 $innodb_data_written_diff=int(($result[9]-$pre_Innodb_data_written)/$sinterval/1024);
+				 $unflushed_log=int(($result[11]-$result[12])/$sinterval/1024);
+				 $uncheckpointed_bytes=int(($result[11]-$result[13])/$sinterval/1024);
+
+		
+			         print MYAWR_REPORT "<tr><td>$result[0]</td><td align=\"right\">$result[2]</td><td align=\"right\">$result[3]</td><td>$result[4]</td><td>$innodb_bp_pages_flushed_diff</td><td>$innodb_data_reads_diff</td><td>$innodb_data_writes_diff</td><td>$innodb_data_read_diff</td><td>$innodb_data_written_diff</td><td>$result[10]</td><td>$unflushed_log</td><td>$uncheckpointed_bytes</td><td>$result[14]</td><td>$result[15]</td><td>$result[16]</td></tr>";  
+		    		 print MYAWR_REPORT "\n";
+
+		       }
+
+	    		$pre_snap_time=$result[0];
+				$pre_unix_s=$result[1]; 
+				
+				$pre_Innodb_buffer_pool_pages_data=$result[2];
+				$pre_Innodb_buffer_pool_pages_free=$result[3];
+				$pre_Innodb_buffer_pool_pages_dirty=$result[4];
+				$pre_Innodb_buffer_pool_pages_flushed=$result[5];
+
+				$pre_Innodb_data_reads=$result[6];
+				$pre_Innodb_data_writes=$result[7];
+				$pre_Innodb_data_read=$result[8];
+				$pre_Innodb_data_written=$result[9];
+				$pre_history_list=$result[10];
+				$pre_log_bytes_written=$result[11];
+				$pre_log_bytes_flushed=$result[12];
+				$pre_last_checkpoint=$result[13];
+
+				$pre_queries_inside=$result[14];
+				$pre_queries_queued=$result[15];
+				$pre_read_views=$result[16];
+
+		   		}
+                
+		  }
+    print MYAWR_REPORT "</table><p /><hr/><p />";		
+
+
+
+		$sth = $dbh->prepare(" select a.snap_id,a.snap_time,a.cpu_user,a.cpu_system,a.cpu_idle,a.cpu_iowait,b.load1,b.load5,d.Threads_connected,d.Threads_running,(select count(1) from myawr_innodb_lock_waits e where a.host_id=e.host_id and a.snap_id=e.snap_id ) lock_waits from myawr_cpu_info a,myawr_load_info b,(select host_id,snap_id,snap_time from myawr_engine_innodb_status where host_id=$tid and  snap_id BETWEEN $start_snap_id and $end_snap_id and snap_time between \"$start_snap_time\" and \"$end_snap_time\"  group by host_id,snap_id,snap_time) c,myawr_mysql_info d where a.host_id=b.host_id and a.host_id=c.host_id and a.host_id=d.host_id and a.snap_id=b.snap_id and a.snap_id=c.snap_id and a.snap_id=d.snap_id ");
+		$sth->execute();
+
+	print MYAWR_REPORT "<p /><h3>MySql peak point Info(you can use myawrsrpt to generate a snap report)</h3><p /><table border=\"1\"  > <tr><th>Snap ID</th><th>Snap Time</th><th>user</th><th>system</th><th>idle</th><th>iowait</th> <th>load1</th><th>load5</th>  <th>Threads_connected</th><th>Threads_running</th><th>lock_waits</th> </tr>";
+				
+		while( my @result = $sth->fetchrow_array )	{
+			  print MYAWR_REPORT "<tr><td>$result[0]</td><td align=\"right\">$result[1]</td><td align=\"right\">$result[2]</td><td>$result[3]</td><td>$result[4]</td><td>$result[5]</td><td align=\"right\">$result[6]</td><td align=\"right\">$result[7]</td><td>$result[8]</td><td>$result[9]</td><td>$result[10]</td></tr>";  
+	          print MYAWR_REPORT "\n";
+		  }
+    print MYAWR_REPORT "</table><p /><hr/><p />";	
+ 	print MYAWR_REPORT "\n";   
+ 			
 		
 		$sth = $dbh->prepare("SELECT a.snap_time,a.load1,a.load5,a.load15 from myawr_load_info a WHERE a.host_id=$tid and a.snap_id in ($sql) and a.snap_time between \"$start_snap_time\" and \"$end_snap_time\" ");
 		$sth->execute();
