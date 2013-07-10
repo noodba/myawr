@@ -2,7 +2,7 @@
 <p>Myawr is a tool for collecting and analyzing performance data for MySQL database (including os info ,mysql status info and Slow Query Log  all of details). The idea comes from Oracle awr. Myawr periodic collect data and save to the database as snapshots. Myawr was designed as CS architecture.Myawr depends on (but not necessary) performance schema of MySQL database. Myawr consists of two parts:</p>
 <p><b>myawr.pl</b><b>&#8212;&#8212;&#8211;a perl script for collecting mysql performance data<br />
 </b><b>myawrrpt.pl&#8212;&#8211;a perl script for analyzing mysql performance data</b>
-<b>myawrsrpt.pl-----a perl script for analyzing mysql peak time data</b>
+<b>myawrsrpt.pl-----a perl script for analyzing mysql peak time data</b><br/>
 </p>
 <p>Myawr relies on the <a href="http://www.percona.com/software/percona-toolkit/">Percona Toolkit</a> to do the slow query log collection. Specifically you can run <a href="http://www.percona.com/doc/percona-toolkit/2.0/pt-query-digest.html">pt-query-digest</a>. To parse your slow logs and insert them into your server database for reporting and analyzing.</p>
 <p>Thanks to orzdba.pl (<a href="mailto:zhuxu@taobao.com">zhuxu@taobao.com</a>).</p>
@@ -63,42 +63,55 @@ grant all on myawr.* to &#8216;user&#8217;@'%&#8217; identified by &#8220;111111
 <p>then create tables in db myawr.</p>
 <br/>
 <p><strong>3.2 initialize myawr_host</strong></p>
-<p>Insert a config record about your mysql instacne,just like:<br />
-INSERT INTO `myawr_host`(id,host_name,ip_addr,port,db_role,version) VALUES (6, &#8216;db2.11&#8242;, &#8217;192.168.2.11&#8242;, 3306, &#8216;master&#8217;, &#8217;5.5.27&#8242;);<br />
+<p><pre>
+Insert a config record about your mysql instacne,just like:
+INSERT INTO `myawr_host`(id,host_name,ip_addr,port,db_role,version, running_thread_threshold,times_per_hour) VALUES (6, 'db2.11', '192.168.2.11', 3306, 'master', '5.5.27',10000,0);
+
+Running_thread_threshold and times_per_hour control whether collect peak time information or not.
+Running_thread_threshold is a trigger for status Threads_running.
+Times_per_hour control the times of collection in lasted a hour.
+If you want to collect peak time infomation ,They have to : 
+running_thread_threshold<=now_running_threads and  times_saved<times_per_hour
+</pre>
+</p>
 <strong>3.3 add two jobs in crontab</strong></p>
 <p>
+<pre>
 * * * * * perl /data/mysql/sh/myawr.pl -u user -p 111111 -lh 192.168.2.11 -P 3306  -tu user -tp 111111 -TP 3306 -th 192.168.1.92 -n eth0 -d sdb1 -I 6 >> /data/mysql/sh/myawr_pl.log 2>&1
-<br/>
+#
 15 14 * * * /data/mysql/sh/pt-query-digest --user=user --password=111111 --review h=192.168.1.92,D=myawr,t=myawr_query_review --review-history h=192.168.1.92,D=myawr,t=myawr_query_review_history --no-report --limit=100\% --filter="\$event->{add_column} = length(\$event->{arg}) and \$event->{hostid}=6"  /data/mysql/sh/slow_`date -d "-1 day" +"\%Y\%m\%d"`.log >> /data/mysql/sh/pt-query_run.log 2>&1
-<p>
 
-<p>myawr.pl Parameters:<br />
--h,&#8211;help Print Help Info.<br />
--i,&#8211;interval Time(second) Interval(default 1).<br />
--d,&#8211;disk Disk Info(can&#8217;t be null,default sda1).<br />
--n,&#8211;net Net Info(default eth0).<br />
--P,&#8211;port Port number to use for local mysql connection(default 3306).<br />
--u,&#8211;user user name for local mysql(default user).<br />
--p,&#8211;pswd user password for local mysql(can&#8217;t be null).<br />
--lh,&#8211;lhost localhost(ip) for mysql where info is got(can&#8217;t be null).<br />
--TP,&#8211;tport Port number to use formysql where info is saved (default 3306)<br />
--tu,&#8211;tuser user name for mysql where info is saved(default user).<br />
--tp,&#8211;pswd user password for mysql where info is saved(can&#8217;t be null).<br />
--th,&#8211;thost host(ip) for mysql where info is saved(can&#8217;t be null).<br />
--I,&#8211;tid db instance register id(can&#8217;t be null,Reference myawr_host.id)</p>
-<p>pt-query-digest Parameters:<br />
-&#8211;user user name for mysql where info is saved<br />
-&#8211;password user password for mysql where info is saved<br />
-&#8211;review Store a sample of each class of query in this DSN<br />
-h host(ip) for mysql where info is saved<br />
-D database<br />
-t table name<br />
-&#8211;review-history The table in which to store historical values for review trend analysis.<br />
-h host(ip) for mysql where info is saved<br />
-D database<br />
-t table name<br />
-$event-&gt;{hostid}=6 db instance register id(Reference myawr_host.id)</p>
-<p>The pt-query-digest only support mechanism for switching a slow log file every day just now, named like slow_20130521.log(slow_date -d &#8220;-1 day&#8221; +&#8221;%Y%m%d&#8221;.log)</p>
+ myawr.pl  Parameters:
+   -h,--help           Print Help Info. 
+   -i,--interval       Time(second) Interval(default 1).  
+   -d,--disk           Disk Info(can't be null,default sda1).
+   -n,--net            Net  Info(default eth0).
+   -P,--port           Port number to use for local mysql connection(default 3306).
+   -u,--user           user name for local mysql(default user).
+   -p,--pswd           user password for local mysql(can't be null).
+   -lh,--lhost         localhost(ip) for mysql where info is got(can't be null).
+   -TP,--tport         Port number to use formysql where info is saved (default 3306)
+   -tu,--tuser         user name for  mysql where info is saved(default user).
+   -tp,--pswd          user password for mysql where info is saved(can't be null).
+   -th,--thost         host(ip) for mysql where info is saved(can't be null).
+   -I,--tid            db instance register id(can't be null,Reference myawr_host.id)
+
+pt-query-digest  Parameters:
+--user  		user name for  mysql where info is saved
+--password		user password for mysql where info is saved
+--review		Store a sample of each class of query in this DSN
+      h			host(ip) for mysql where info is saved
+      D			database
+      t			table name
+--review-history	The table in which to store historical values for review trend analysis.
+      h			host(ip) for mysql where info is saved
+      D			database
+      t			table name
+$event->{hostid}=6	db instance register id(Reference myawr_host.id)
+
+The pt-query-digest only support mechanism for switching a slow log file every day just now, named like slow_20130521.log(slow_date -d "-1 day" +"%Y%m%d".log)
+
+</pre>
 <h2> <strong>4. Dependencies</strong></h2>
 <p>perl-DBD-mysql<br />
 you can install it two way:<br />
