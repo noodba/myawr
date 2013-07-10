@@ -6,6 +6,13 @@ use Socket;    # Get IP info
 
 Getopt::Long::Configure qw(no_ignore_case);    #
 
+
+( my $sript_name = $0 ) =~ s!.*/(.*)!$1! ;
+my $is_running = `ps -ef | grep $sript_name | grep -v grep | wc -l`;
+exit if($is_running>2) ;
+
+
+
 my %opt;                                       # Get options info
 
 # Options
@@ -472,6 +479,10 @@ sub get_mysqlstat {
         $vars->{"$row->[0]"} = $row->[1];
     }
 
+    my ($running_thread_threshold,$times_per_hour)=$dbh_save->selectrow_array("select running_thread_threshold,times_per_hour from myawr.myawr_host where id=$tid");
+    my $times_saved= $dbh_save->selectrow_array("select count(DISTINCT snap_id) cnt  from myawr_engine_innodb_status where snap_time>=DATE_ADD(now(),INTERVAL -1 HOUR) and host_id=$tid");
+    my $now_running_threads=$mystat2->{"Threads_running"};
+    my $order_id=1;
     
     # Func : Get Innodb Status from Command: 'Show Engine Innodb Status'  ________________start
 
@@ -487,7 +498,8 @@ sub get_mysqlstat {
     # http://code.google.com/p/mysql-cacti-templates/source/browse/trunk/scripts/ss_get_mysql_stats.php
 	foreach (@result) {
 		chomp($_);
-     #print $_ . "\n";
+        
+        #print $_ . "\n";
 		# ------------
 		# TRANSACTIONS
 		# ------------
@@ -543,6 +555,11 @@ sub get_mysqlstat {
 		#        $innodb_status{""} = $tmp[3];
 		# }
 
+        if($running_thread_threshold<=$now_running_threads  and  $times_saved<$times_per_hour){
+		    $sql =qq{insert into myawr.myawr_engine_innodb_status(snap_id,host_id,order_id,row_status,snap_time)  values($snap_id,$tid,$order_id, \"$_\", \"$snap_time\")};
+		    $dbh_save->do($sql);
+		    $order_id +=1;
+        }
 	}
 	$innodb_status{"unflushed_log"} =
 	$innodb_status{"log_bytes_written"} - $innodb_status{"log_bytes_flushed"};
@@ -550,6 +567,99 @@ sub get_mysqlstat {
 	$innodb_status{"log_bytes_written"} - $innodb_status{"last_checkpoint"};
 
     # Func : Get Innodb Status from Command: 'Show Engine Innodb Status'  ________________end
+
+    if($running_thread_threshold<=$now_running_threads and  $times_saved<$times_per_hour){
+
+		my $sql2 = qq{ insert into myawr_active_session(snap_id,host_id,USER,HOST,DB,COMMAND,TIME,STATE,INFO,snap_time) values ($snap_id,$tid, ?,?,?, ?, ? ,?,?,?) };
+		my $sth2 = $dbh_save->prepare( $sql2 );
+		
+		$sth = $dbh->prepare("select USER,HOST,DB,COMMAND,TIME,STATE,INFO from information_schema.PROCESSLIST where COMMAND<>'Sleep'");
+		$sth->execute();
+		while( my @result2 = $sth->fetchrow_array )	{
+  			    $sth2->bind_param( 1, $result2[0], SQL_VARCHAR );
+			    $sth2->bind_param( 2, $result2[1], SQL_VARCHAR);
+			    $sth2->bind_param( 3, $result2[2], SQL_VARCHAR );
+			    $sth2->bind_param( 4, $result2[3], SQL_VARCHAR );
+			    $sth2->bind_param( 5, $result2[4], SQL_INTEGER );
+			    $sth2->bind_param( 6, $result2[5], SQL_VARCHAR );
+			    $sth2->bind_param( 7, $result2[6] );			    
+			    $sth2->bind_param( 8, $snap_time, SQL_DATE );    
+			    $sth2->execute();    
+		  }
+		
+		$sql2 = qq{ insert into myawr_innodb_trx(snap_id,host_id,trx_id,trx_state,trx_started,trx_requested_lock_id,trx_wait_started,trx_weight,trx_mysql_thread_id,trx_query,trx_operation_state,trx_tables_in_use,trx_tables_locked,trx_lock_structs,trx_lock_memory_bytes,trx_rows_locked,trx_rows_modified,trx_concurrency_tickets,trx_isolation_level,trx_unique_checks,trx_foreign_key_checks,trx_last_foreign_key_error,trx_adaptive_hash_latched,trx_adaptive_hash_timeout,snap_time) values ($snap_id,$tid,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)};  
+		$sth2 = $dbh_save->prepare( $sql2 );
+		
+		$sth = $dbh->prepare("select trx_id,trx_state,trx_started,trx_requested_lock_id,trx_wait_started,trx_weight,trx_mysql_thread_id,trx_query,trx_operation_state,trx_tables_in_use,trx_tables_locked,trx_lock_structs,trx_lock_memory_bytes,trx_rows_locked,trx_rows_modified,trx_concurrency_tickets,trx_isolation_level,trx_unique_checks,trx_foreign_key_checks,trx_last_foreign_key_error,trx_adaptive_hash_latched,trx_adaptive_hash_timeout from information_schema.INNODB_TRX");		
+		$sth->execute();
+		while( my @result2 = $sth->fetchrow_array )	{
+    			$sth2->bind_param( 1, $result2[0], SQL_VARCHAR );
+			    $sth2->bind_param( 2, $result2[1], SQL_VARCHAR);
+			    $sth2->bind_param( 3, $result2[2], SQL_DATE );
+			    $sth2->bind_param( 4, $result2[3], SQL_VARCHAR );
+			    $sth2->bind_param( 5, $result2[4], SQL_DATE );
+
+			    $sth2->bind_param( 6, $result2[5], SQL_INTEGER );
+			    $sth2->bind_param( 7, $result2[6], SQL_INTEGER );
+  			    $sth2->bind_param( 8, $result2[7], SQL_VARCHAR );
+			    $sth2->bind_param( 9, $result2[8], SQL_VARCHAR);
+			    $sth2->bind_param( 10,$result2[9], SQL_INTEGER );
+
+			    $sth2->bind_param( 11,$result2[10], SQL_INTEGER );
+			    $sth2->bind_param( 12, $result2[11], SQL_INTEGER );
+			    $sth2->bind_param( 13, $result2[12], SQL_INTEGER );
+			    $sth2->bind_param( 14, $result2[13], SQL_INTEGER );			    
+  			    $sth2->bind_param( 15, $result2[14], SQL_INTEGER );
+			    $sth2->bind_param( 16, $result2[15], SQL_INTEGER);
+
+			    $sth2->bind_param( 17, $result2[16], SQL_VARCHAR );
+			    $sth2->bind_param( 18, $result2[17], SQL_INTEGER );
+			    $sth2->bind_param( 19, $result2[18], SQL_INTEGER );
+			    $sth2->bind_param( 20, $result2[19], SQL_VARCHAR );
+			    $sth2->bind_param( 21, $result2[20], SQL_INTEGER );    
+			    $sth2->bind_param( 22, $result2[21], SQL_INTEGER );			    
+			    $sth2->bind_param( 23, $snap_time, SQL_DATE );    
+			    $sth2->execute();    
+		  }
+		  
+		$sql2 = qq{ insert into myawr_innodb_locks(snap_id,host_id,lock_id,lock_trx_id,lock_mode,lock_type,lock_table,lock_index,lock_space,lock_page,lock_rec,lock_data,snap_time) values ($snap_id,$tid,?,?,?,?,?,?,?,?,?,?,?)};  
+		$sth2 = $dbh_save->prepare( $sql2 );
+		
+		$sth = $dbh->prepare("select lock_id,lock_trx_id,lock_mode,lock_type,lock_table,lock_index,lock_space,lock_page,lock_rec,lock_data from information_schema.INNODB_LOCKS");		  		  
+		$sth->execute();
+		while( my @result2 = $sth->fetchrow_array )	{
+      		   $sth2->bind_param( 1, $result2[0], SQL_VARCHAR );
+			   $sth2->bind_param( 2, $result2[1], SQL_VARCHAR);
+			   $sth2->bind_param( 3, $result2[2], SQL_VARCHAR );
+			   $sth2->bind_param( 4, $result2[3], SQL_VARCHAR );
+			   $sth2->bind_param( 5, $result2[4], SQL_VARCHAR );
+
+			   $sth2->bind_param( 6, $result2[5], SQL_VARCHAR );
+			   $sth2->bind_param( 7, $result2[6], SQL_INTEGER );
+  			   $sth2->bind_param( 8, $result2[7], SQL_INTEGER );
+			   $sth2->bind_param( 9, $result2[8], SQL_INTEGER);
+			   $sth2->bind_param( 10,$result2[9], SQL_VARCHAR );		    
+			   $sth2->bind_param( 11, $snap_time, SQL_DATE );    
+			   $sth2->execute();    
+		  }
+		  
+		$sql2 = qq{ insert into myawr_innodb_lock_waits(snap_id,host_id,requesting_trx_id,requested_lock_id,blocking_trx_id,blocking_lock_id,snap_time) values ($snap_id,$tid,?,?,?,?,?)};  
+		$sth2 = $dbh_save->prepare( $sql2 );
+		
+		$sth = $dbh->prepare("select requesting_trx_id,requested_lock_id,blocking_trx_id,blocking_lock_id from information_schema.INNODB_LOCK_WAITS");		  		  
+		$sth->execute();
+		while( my @result2 = $sth->fetchrow_array )	{
+      		   $sth2->bind_param( 1, $result2[0], SQL_VARCHAR );
+			   $sth2->bind_param( 2, $result2[1], SQL_VARCHAR);
+			   $sth2->bind_param( 3, $result2[2], SQL_VARCHAR );
+			   $sth2->bind_param( 4, $result2[3], SQL_VARCHAR );
+			   $sth2->bind_param( 5, $snap_time, SQL_DATE );    
+			   $sth2->execute();    
+		  }
+		  
+		  $sth2->finish;		      
+    }
+
 
 	$sql =
 	qq{insert into myawr.myawr_mysql_info(snap_id,host_id,query_cache_size,thread_cache_size,table_definition_cache,max_connections,table_open_cache,slow_launch_time,max_heap_table_size,tmp_table_size,open_files_limit,Max_used_connections,Threads_connected,Threads_cached,Threads_created,Threads_running,Connections,Questions,Com_select,Com_insert,Com_update,Com_delete,Bytes_received,Bytes_sent,Qcache_hits,Qcache_inserts,Select_full_join,Select_scan,Slow_queries,Com_commit,Com_rollback,Open_files,Open_table_definitions,Open_tables,Opened_files,Opened_table_definitions,Opened_tables,Created_tmp_disk_tables,Created_tmp_files,Created_tmp_tables,Binlog_cache_disk_use,Binlog_cache_use,Aborted_clients,Sort_merge_passes,Sort_range,Sort_rows,Sort_scan,Table_locks_immediate,Table_locks_waited,Handler_read_first,Handler_read_key,Handler_read_last,Handler_read_next,Handler_read_prev,Handler_read_rnd,Handler_read_rnd_next,snap_time) values($snap_id,$tid,$vars->{"query_cache_size"},$vars->{"thread_cache_size"},$vars->{"table_definition_cache"},$vars->{"max_connections"},$vars->{"table_open_cache"},$vars->{"slow_launch_time"},$vars->{"max_heap_table_size"},$vars->{"tmp_table_size"},$vars->{"open_files_limit"},$mystat2->{"Max_used_connections"},$mystat2->{"Threads_connected"},$mystat2->{"Threads_cached"},$mystat2->{"Threads_created"},$mystat2->{"Threads_running"},$mystat2->{"Connections"},$mystat2->{"Questions"},$mystat2->{"Com_select"},$mystat2->{"Com_insert"},$mystat2->{"Com_update"},$mystat2->{"Com_delete"},$mystat2->{"Bytes_received"},$mystat2->{"Bytes_sent"},$mystat2->{"Qcache_hits"},$mystat2->{"Qcache_inserts"},$mystat2->{"Select_full_join"},$mystat2->{"Select_scan"},$mystat2->{"Slow_queries"},$mystat2->{"Com_commit"},$mystat2->{"Com_rollback"},$mystat2->{"Open_files"},$mystat2->{"Open_table_definitions"},$mystat2->{"Open_tables"},$mystat2->{"Opened_files"},$mystat2->{"Opened_table_definitions"},$mystat2->{"Opened_tables"},$mystat2->{"Created_tmp_disk_tables"},$mystat2->{"Created_tmp_files"},$mystat2->{"Created_tmp_tables"},$mystat2->{"Binlog_cache_disk_use"},$mystat2->{"Binlog_cache_use"},$mystat2->{"Aborted_clients"},$mystat2->{"Sort_merge_passes"},$mystat2->{"Sort_range"},$mystat2->{"Sort_rows"},$mystat2->{"Sort_scan"},$mystat2->{"Table_locks_immediate"},$mystat2->{"Table_locks_waited"},$mystat2->{"Handler_read_first"},$mystat2->{"Handler_read_key"},$mystat2->{"Handler_read_last"},$mystat2->{"Handler_read_next"},$mystat2->{"Handler_read_prev"},$mystat2->{"Handler_read_rnd"},$mystat2->{"Handler_read_rnd_next"}, \"$snap_time\")};
