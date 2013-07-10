@@ -1,4 +1,9 @@
 
+Changes in v2.0 (2013-07-10  branch:master)
+
+   ⊙ archive v1.5 to branch:v1.5,the branch will not update.
+   ⊙ Add peak time info collecting.
+   ⊙ Add snapshot report
 
 Changes in v1.5 (2013-05-26  branch:master)
 
@@ -6,8 +11,6 @@ Changes in v1.5 (2013-05-26  branch:master)
    ⊙ change tables to partition table. 
       you should change partition rules depending on your situation
    ⊙ if you have deployed v1.0 ,pls upgrade tables just like myawr_upgrade_from_v1.0.sql
-
-
 
 
 Changes in v1.0 (2013-05-22  branch:master)
