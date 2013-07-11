@@ -14,6 +14,13 @@ Myawr relies on the Percona Toolkit to do the slow query log collection.
 Specifically you can run pt-query-digest. To parse your slow logs and insert them into your server database for reporting and analyzing. 
 
 Thanks to orzdba.pl (zhuxu@taobao.com).
+<br/>
+<br/>
+Here is myawr architecture:
+<a href="http://www.noodba.com/wp-content/uploads/2013/05/myawr_archit1.png"><img src="http://www.noodba.com/wp-content/uploads/2013/05/myawr_archit1.png" alt="myawr_archit1" width="857" height="492" class="alignnone size-full wp-image-376" /></a>
+
+<a href="http://www.noodba.com/wp-content/uploads/2013/05/myawr_archit2.png"><img src="http://www.noodba.com/wp-content/uploads/2013/05/myawr_archit2.png" alt="myawr_archit2" width="771" height="549" class="alignnone size-full wp-image-377" /></a>
+
 </pre>
 
 
@@ -54,6 +61,7 @@ myawr data model:
 myawr_snapshot.host_id    reference myawr_host.id;
 myawr_query_review_history.hostid_max reference myawr_host.id;
 myawr_innodb_info.(host_id,snap_id) reference myawr_snapshot.(host_id,snap_id);
+<a href="http://www.noodba.com/wp-content/uploads/2013/05/myawr1.png"><img class="alignnone size-full wp-image-330" alt="myawr1" src="http://www.noodba.com/wp-content/uploads/2013/05/myawr1.png" width="1264" height="1596" /></a>
 </pre> 
 
 <h2>3. Quickstart</h2>
@@ -65,11 +73,13 @@ If you are interesting to use this tool, here's what you need:
  3. A MySQL server(version 5.5) with perl-DBD-mysql
  4. slow query logs named like slow_20130521.log,you can switch slow logs every day.
 
-3.1 install db
+3.1 install db(where you store shapshot data,perl-DBD-MySQL is required)
 Connect to the MySQL database where store the performance data and issue the following command in myawr.sql:
+grant all on myawr.* to 'myuser'@'localhost' identified by "111111";
+grant all on myawr.* to 'myuser'@'%' identified by "111111";
+then create tables.
 
-3.2 initialize myawr_host
-
+3.2 initialize myawr_host(where you store shapshot data)
 Insert a config record about your mysql instacne,just like:
 INSERT INTO `myawr_host`(id,host_name,ip_addr,port,db_role,version, running_thread_threshold,times_per_hour) VALUES (6, 'db2.11', '192.168.2.11', 3306, 'master', '5.5.27',10000,0);
 
@@ -78,8 +88,11 @@ Running_thread_threshold is a trigger for status Threads_running.
 Times_per_hour control the times of collection in lasted a hour.
 If you want to collect peak time infomation ,They have to : 
 running_thread_threshold<=now_running_threads and  times_saved<times_per_hour
+<br/>
 
-3.3 add two jobs in crontab
+3.3 add two jobs in crontab(That mysql instance you want to watch,perl-DBD-MySQL is required)
+
+grant all on *.* to 'superuser'@'localhost' identified by "111111";
 
 * * * * * perl /data/mysql/sh/myawr.pl -u user -p 111111 -lh 192.168.2.11 -P 3306  -tu user -tp 111111 -TP 3306 -th 192.168.1.92 -n eth0 -d sdb1 -I 6 >> /data/mysql/sh/myawr_pl.log 2>&1
 #
@@ -101,7 +114,7 @@ running_thread_threshold<=now_running_threads and  times_saved<times_per_hour
    -I,--tid            db instance register id(can't be null,Reference myawr_host.id)
 
 pt-query-digest  Parameters:
---user  		user name for  mysql where info is saved
+--user   	user name for  mysql where info is saved
 --password		user password for mysql where info is saved
 --review		Store a sample of each class of query in this DSN
       h			host(ip) for mysql where info is saved
