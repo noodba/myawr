@@ -1,10 +1,11 @@
-
 Changes in v2.0 (2013-07-10  branch:master)
 
    ⊙ archive v1.5 to branch:v1.5,the branch will not update.
    ⊙ Add peak time info collecting.
    ⊙ Add snapshot report
-
+   ⊙ deploy myawr step by step:
+   https://github.com/noodba/myawr/wiki/deploy-myawr-step-by-step
+   
 Changes in v1.5 (2013-05-26  branch:master)
 
    ⊙ archive v1.0 to branch:v1.0,the branch will not update.
