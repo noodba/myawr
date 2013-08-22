@@ -298,4 +298,6 @@ Any questions,pls contact me freely.
 EMAIL: qiuwsh@gmail.com
 Q Q : 570182914
 Phone: (+86)13817963180
+weibo: weibo.com/noodba
+blog: www.noodba.com
 </pre>
